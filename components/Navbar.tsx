@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import ConnectWalletButton from "./ConnectWalletButton";
 
 const links = [
   { href: "/events", label: "Events" },
@@ -48,15 +49,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden md:block">
-          <button
-            type="button"
-            onClick={() =>
-              alert("Wallet connection will be added later.")
-            }
-            className="btn-primary"
-          >
-            Connect Wallet
-          </button>
+          <ConnectWalletButton />
         </div>
 
         <button
@@ -89,15 +82,9 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <button
-              onClick={() => {
-                setOpen(false);
-                alert("Wallet connection will be added later.");
-              }}
-              className="btn-primary mt-2"
-            >
-              Connect Wallet
-            </button>
+            <div className="mt-2">
+              <ConnectWalletButton className="btn-primary w-full" />
+            </div>
           </div>
         </div>
       )}

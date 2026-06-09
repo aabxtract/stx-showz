@@ -4,11 +4,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { mockEvents, shortAddr } from "@/lib/mockData";
+import { useWallet } from "@/components/WalletProvider";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const event = mockEvents.find((e) => e.id === id);
   const [showModal, setShowModal] = useState(false);
+  const { isConnected, connect } = useWallet();
 
   if (!event) {
     return (
@@ -134,11 +136,15 @@ export default function EventDetailPage() {
             </div>
 
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => (isConnected ? setShowModal(true) : connect())}
               disabled={soldOut}
               className="btn-primary w-full mt-6 !py-3 text-base"
             >
-              {soldOut ? "Sold out" : "Buy Ticket"}
+              {soldOut
+                ? "Sold out"
+                : isConnected
+                ? "Buy Ticket"
+                : "Connect Wallet to Buy"}
             </button>
 
             <div className="mt-5 pt-5 border-t border-slate-100 text-sm">
