@@ -20,7 +20,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center font-semibold" aria-label="Veritix home">
           <Image
             src="/logo.png"
@@ -28,7 +28,7 @@ export default function Navbar() {
             width={544}
             height={180}
             priority
-            className="h-9 w-auto"
+            className="h-14 sm:h-16 w-auto"
           />
         </Link>
 
