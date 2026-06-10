@@ -5,9 +5,14 @@ import Footer from "@/components/Footer";
 import { WalletProvider } from "@/components/WalletProvider";
 
 export const metadata: Metadata = {
-  title: "STX Showz — Event ticketing on Stacks",
+  title: "Veritix — Event ticketing on Stacks",
   description:
     "Create, sell, and verify event tickets on Stacks. A simple, blockchain-backed event ticketing platform.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

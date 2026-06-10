@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import ConnectWalletButton from "./ConnectWalletButton";
@@ -20,11 +21,15 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-sm">
-            S
-          </span>
-          <span>STX Showz</span>
+        <Link href="/" className="flex items-center font-semibold" aria-label="Veritix home">
+          <Image
+            src="/logo.png"
+            alt="Veritix"
+            width={544}
+            height={180}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

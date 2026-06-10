@@ -20,8 +20,15 @@ interface WalletState {
   setNetwork: (n: Network) => void;
 }
 
-const appConfig = new AppConfig(["store_write"]);
-export const userSession = new UserSession({ appConfig });
+let _userSession: UserSession | null = null;
+function getUserSession(): UserSession | null {
+  if (typeof window === "undefined") return null;
+  if (!_userSession) {
+    const appConfig = new AppConfig(["store_write"]);
+    _userSession = new UserSession({ appConfig });
+  }
+  return _userSession;
+}
 
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
@@ -30,46 +37,68 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [network, setNetwork] = useState<Network>("testnet");
 
   const refreshFromSession = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if (userSession.isUserSignedIn()) {
-      const data = userSession.loadUserData();
-      const addr =
-        network === "mainnet"
-          ? data.profile?.stxAddress?.mainnet
-          : data.profile?.stxAddress?.testnet;
-      setAddress(addr ?? null);
-    } else {
+    const session = getUserSession();
+    if (!session) return;
+    try {
+      if (session.isUserSignedIn()) {
+        const data = session.loadUserData();
+        const addr =
+          network === "mainnet"
+            ? data.profile?.stxAddress?.mainnet
+            : data.profile?.stxAddress?.testnet;
+        setAddress(addr ?? null);
+      } else {
+        setAddress(null);
+      }
+    } catch (err) {
+      console.warn("Wallet session read failed:", err);
       setAddress(null);
     }
   }, [network]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (userSession.isSignInPending()) {
-      userSession.handlePendingSignIn().then(() => refreshFromSession());
-    } else {
-      refreshFromSession();
+    const session = getUserSession();
+    if (!session) return;
+    try {
+      if (session.isSignInPending()) {
+        session.handlePendingSignIn().then(() => refreshFromSession());
+      } else {
+        refreshFromSession();
+      }
+    } catch (err) {
+      console.warn("Wallet init failed:", err);
     }
   }, [refreshFromSession]);
 
   const connect = useCallback(() => {
-    showConnect({
-      appDetails: {
-        name: "STX Showz",
-        icon:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/favicon.ico`
-            : "",
-      },
-      redirectTo: "/",
-      userSession,
-      onFinish: () => refreshFromSession(),
-      onCancel: () => {},
-    });
+    const session = getUserSession();
+    if (!session) return;
+    try {
+      showConnect({
+        appDetails: {
+          name: "Veritix",
+          icon: `${window.location.origin}/favicon.png`,
+        },
+        redirectTo: "/",
+        userSession: session,
+        onFinish: () => refreshFromSession(),
+        onCancel: () => {},
+      });
+    } catch (err) {
+      console.error("showConnect failed:", err);
+      alert(
+        "Could not open the wallet connect dialog. Make sure a Stacks wallet (Leather or Xverse) is installed, then refresh and try again."
+      );
+    }
   }, [refreshFromSession]);
 
   const disconnect = useCallback(() => {
-    userSession.signUserOut();
+    const session = getUserSession();
+    try {
+      session?.signUserOut();
+    } catch (err) {
+      console.warn("Sign out failed:", err);
+    }
     setAddress(null);
   }, []);
 

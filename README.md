@@ -1,4 +1,4 @@
-# STX Showz
+# Veritix
 
 A frontend prototype for a Stacks-based event ticketing platform. Mock data only — no smart contract, wallet, or backend integration yet.
 
