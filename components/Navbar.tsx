@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import ConnectWalletButton from "./ConnectWalletButton";
+import { useWallet } from "./WalletProvider";
 
 const links = [
   { href: "/events", label: "Events" },
@@ -17,6 +18,7 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { isConnected } = useWallet();
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
@@ -53,8 +55,22 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="hidden md:block">
-          <ConnectWalletButton />
+        <div className="hidden md:flex items-center gap-2">
+          {isConnected ? (
+            <ConnectWalletButton />
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              >
+                Log in
+              </Link>
+              <Link href="/signup" className="btn-primary !py-2 !px-4 text-sm">
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -88,7 +104,26 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="mt-2">
-              <ConnectWalletButton className="btn-primary w-full" />
+              {isConnected ? (
+                <ConnectWalletButton className="btn-primary w-full" />
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="btn-secondary w-full text-center"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setOpen(false)}
+                    className="btn-primary w-full text-center"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
