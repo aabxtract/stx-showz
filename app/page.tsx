@@ -56,10 +56,10 @@ export default function HomePage() {
                 Explore Events
               </Link>
               <Link
-                href="/create-event"
+                href="/signup"
                 className="btn-secondary text-base !py-3 !px-6"
               >
-                Create Event
+                Get Started
               </Link>
             </div>
           </div>
@@ -122,10 +122,10 @@ export default function HomePage() {
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/create-event"
+              href="/signup"
               className="btn bg-white text-brand-700 hover:bg-brand-50 !py-3 !px-6"
             >
-              Create Event
+              Get Started
             </Link>
             <Link
               href="/events"

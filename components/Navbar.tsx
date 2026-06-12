@@ -7,7 +7,9 @@ import { useState } from "react";
 import ConnectWalletButton from "./ConnectWalletButton";
 import { useWallet } from "./WalletProvider";
 
-const links = [
+const publicLinks: { href: string; label: string }[] = [];
+
+const privateLinks = [
   { href: "/events", label: "Events" },
   { href: "/create-event", label: "Create Event" },
   { href: "/my-tickets", label: "My Tickets" },
@@ -19,6 +21,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { isConnected } = useWallet();
+  const links = isConnected ? [...publicLinks, ...privateLinks] : publicLinks;
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
