@@ -7,9 +7,22 @@ import {
   useEffect,
   useState,
 } from "react";
-import { AppConfig, UserSession, showConnect } from "@stacks/connect";
+import {
+  AppConfig,
+  UserSession,
+  showConnect,
+  openSignatureRequestPopup,
+} from "@stacks/connect";
 
 type Network = "mainnet" | "testnet";
+
+export interface SessionUser {
+  id: string;
+  address: string;
+  name: string | null;
+  bio?: string | null;
+  avatarUrl: string | null;
+}
 
 interface WalletState {
   isConnected: boolean;
@@ -18,6 +31,11 @@ interface WalletState {
   connect: () => void;
   disconnect: () => void;
   setNetwork: (n: Network) => void;
+  user: SessionUser | null;
+  isAuthed: boolean;
+  authLoading: boolean;
+  signInWithServer: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 let _userSession: UserSession | null = null;
@@ -35,6 +53,8 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
   const [network, setNetwork] = useState<Network>("testnet");
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const refreshFromSession = useCallback(() => {
     const session = getUserSession();
@@ -56,9 +76,28 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, [network]);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!res.ok) {
+        setUser(null);
+        return;
+      }
+      const data = await res.json();
+      setUser(data.user ?? null);
+    } catch {
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const session = getUserSession();
-    if (!session) return;
+    if (!session) {
+      setAuthLoading(false);
+      return;
+    }
     try {
       if (session.isSignInPending()) {
         session.handlePendingSignIn().then(() => refreshFromSession());
@@ -68,7 +107,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.warn("Wallet init failed:", err);
     }
-  }, [refreshFromSession]);
+    refreshUser();
+  }, [refreshFromSession, refreshUser]);
 
   const connect = useCallback(() => {
     const session = getUserSession();
@@ -92,7 +132,56 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshFromSession]);
 
-  const disconnect = useCallback(() => {
+  const signInWithServer = useCallback(async () => {
+    if (!address) throw new Error("Connect wallet first");
+
+    const nonceRes = await fetch("/api/auth/nonce", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
+    if (!nonceRes.ok) throw new Error("Failed to get nonce");
+    const { message, issuedAt } = (await nonceRes.json()) as {
+      message: string;
+      issuedAt: string;
+    };
+
+    const session = getUserSession();
+    const signed = await new Promise<{ signature: string; publicKey: string }>(
+      (resolve, reject) => {
+        openSignatureRequestPopup({
+          message,
+          userSession: session ?? undefined,
+          appDetails: {
+            name: "Veritix",
+            icon: `${window.location.origin}/favicon.png`,
+          },
+          onFinish: (data) =>
+            resolve({ signature: data.signature, publicKey: data.publicKey }),
+          onCancel: () => reject(new Error("User cancelled signature")),
+        });
+      },
+    );
+
+    const verifyRes = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        address,
+        publicKey: signed.publicKey,
+        signature: signed.signature,
+        issuedAt,
+      }),
+    });
+    if (!verifyRes.ok) {
+      const err = await verifyRes.json().catch(() => ({}));
+      throw new Error(err.error || "Verification failed");
+    }
+    const data = await verifyRes.json();
+    setUser(data.user);
+  }, [address]);
+
+  const disconnect = useCallback(async () => {
     const session = getUserSession();
     try {
       session?.signUserOut();
@@ -100,6 +189,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.warn("Sign out failed:", err);
     }
     setAddress(null);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    setUser(null);
   }, []);
 
   return (
@@ -111,6 +204,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         connect,
         disconnect,
         setNetwork,
+        user,
+        isAuthed: !!user,
+        authLoading,
+        signInWithServer,
+        refreshUser,
       }}
     >
       {children}

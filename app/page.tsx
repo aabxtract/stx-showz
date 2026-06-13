@@ -1,6 +1,5 @@
 import Link from "next/link";
-import EventCard from "@/components/EventCard";
-import { mockEvents } from "@/lib/mockData";
+import FeaturedEvents from "@/components/FeaturedEvents";
 
 const steps = [
   {
@@ -21,8 +20,6 @@ const steps = [
 ];
 
 export default function HomePage() {
-  const featured = mockEvents.slice(0, 3);
-
   return (
     <>
       {/* Hero */}
@@ -106,11 +103,7 @@ export default function HomePage() {
             See all events →
           </Link>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {featured.map((e) => (
-            <EventCard key={e.id} event={e} />
-          ))}
-        </div>
+        <FeaturedEvents />
 
         <div className="mt-16 card p-8 sm:p-12 bg-gradient-to-br from-brand-600 to-brand-800 text-white text-center">
           <h3 className="text-2xl sm:text-3xl font-semibold">
