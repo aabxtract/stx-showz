@@ -6,16 +6,28 @@ import { useRouter } from "next/navigation";
 import { useWallet, shortAddress } from "@/components/WalletProvider";
 
 export default function SignupPage() {
-  const { isConnected, address, connect } = useWallet();
+  const { isConnected, address, connect, isAuthed, signInWithServer } = useWallet();
   const router = useRouter();
   const [agreed, setAgreed] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isConnected && agreed) {
-      const t = setTimeout(() => router.push("/profile"), 800);
+    if (isAuthed) {
+      const t = setTimeout(() => router.push("/profile"), 600);
       return () => clearTimeout(t);
     }
-  }, [isConnected, agreed, router]);
+  }, [isAuthed, router]);
+
+  useEffect(() => {
+    if (isConnected && agreed && !isAuthed && !signing) {
+      setSigning(true);
+      setError(null);
+      signInWithServer()
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setSigning(false));
+    }
+  }, [isConnected, agreed, isAuthed, signing, signInWithServer]);
 
   return (
     <section className="container-page !py-20">
@@ -42,19 +54,25 @@ export default function SignupPage() {
           </span>
         </label>
 
-        {isConnected ? (
+        {isAuthed ? (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
             <div className="text-xs text-emerald-700 font-medium">
-              Account created
+              Account ready
             </div>
             <div className="font-mono text-sm text-emerald-900 mt-1">
               {shortAddress(address)}
             </div>
-            <div className="text-xs text-emerald-700 mt-2">
-              {agreed
-                ? "Redirecting to your profile…"
-                : "Please accept the terms above to continue."}
+            <div className="text-xs text-emerald-700 mt-2">Redirecting…</div>
+          </div>
+        ) : isConnected ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <div className="text-xs text-slate-700 font-medium">
+              {signing ? "Waiting for signature…" : "Wallet connected"}
             </div>
+            <div className="font-mono text-sm text-slate-900 mt-1">
+              {shortAddress(address)}
+            </div>
+            {error && <div className="text-xs text-red-600 mt-2">{error}</div>}
           </div>
         ) : (
           <button

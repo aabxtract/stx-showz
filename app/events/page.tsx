@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import EventCard from "@/components/EventCard";
 import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
-import { mockEvents } from "@/lib/mockData";
+import { fetchEvents } from "@/lib/apiClient";
+import type { AppEvent } from "@/lib/types";
 
 const categories = [
   "All",
@@ -19,18 +20,31 @@ const categories = [
 export default function EventsPage() {
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("All");
+  const [events, setEvents] = useState<AppEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    return mockEvents.filter((e) => {
-      const matchesCat = cat === "All" || e.category === cat;
-      const q = query.trim().toLowerCase();
-      const matchesQ =
-        !q ||
-        e.title.toLowerCase().includes(q) ||
-        e.location.toLowerCase().includes(q);
-      return matchesCat && matchesQ;
-    });
-  }, [query, cat]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    const handle = setTimeout(() => {
+      fetchEvents({ category: cat === "All" ? undefined : cat, q: query || undefined })
+        .then((evts) => {
+          if (!cancelled) setEvents(evts);
+        })
+        .catch((e: Error) => {
+          if (!cancelled) setError(e.message);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [cat, query]);
 
   return (
     <div className="container-page">
@@ -68,7 +82,11 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="text-center text-slate-500 py-10">Loading events…</div>
+      ) : error ? (
+        <EmptyState icon="⚠️" title="Could not load events" description={error} />
+      ) : events.length === 0 ? (
         <EmptyState
           icon="🎟️"
           title="No events match your filters"
@@ -76,7 +94,7 @@ export default function EventsPage() {
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((e) => (
+          {events.map((e) => (
             <EventCard key={e.id} event={e} />
           ))}
         </div>

@@ -2,24 +2,122 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
-import { mockEvents, shortAddr } from "@/lib/mockData";
-import { useWallet } from "@/components/WalletProvider";
+import { useEffect, useState } from "react";
+import { openSTXTransfer } from "@stacks/connect";
+import { StacksMainnet, StacksTestnet } from "@stacks/network";
+import { useWallet, shortAddress } from "@/components/WalletProvider";
+import { fetchEvent, purchaseTicket } from "@/lib/apiClient";
+import type { AppEvent } from "@/lib/types";
+
+const ESCROW_TESTNET = process.env.NEXT_PUBLIC_ESCROW_ADDRESS_TESTNET || "";
+const ESCROW_MAINNET = process.env.NEXT_PUBLIC_ESCROW_ADDRESS_MAINNET || "";
+const DEV_PAYMENT_BYPASS = process.env.NEXT_PUBLIC_DEV_PAYMENT_BYPASS === "true";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const event = mockEvents.find((e) => e.id === id);
-  const [showModal, setShowModal] = useState(false);
-  const { isConnected, connect } = useWallet();
+  const { isAuthed, network, connect, isConnected, signInWithServer } = useWallet();
+
+  const [event, setEvent] = useState<AppEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [purchaseState, setPurchaseState] = useState<
+    | { stage: "idle" }
+    | { stage: "signing" }
+    | { stage: "pending"; txId: string }
+    | { stage: "success"; txId: string }
+    | { stage: "error"; message: string }
+  >({ stage: "idle" });
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetchEvent(id)
+      .then(setEvent)
+      .catch(() => setEvent(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const handleBuy = async () => {
+    if (!event) return;
+    if (!isConnected) return connect();
+    if (!isAuthed) {
+      try {
+        await signInWithServer();
+      } catch (e) {
+        setPurchaseState({ stage: "error", message: (e as Error).message });
+        return;
+      }
+    }
+
+    if (DEV_PAYMENT_BYPASS) {
+      setPurchaseState({ stage: "signing" });
+      const fakeTxId = `0xdev${Math.random().toString(16).slice(2).padEnd(60, "0").slice(0, 60)}`;
+      try {
+        const res = await purchaseTicket({ eventId: event.id, txId: fakeTxId, network });
+        if (res?.ticket?.status === "Valid") {
+          setPurchaseState({ stage: "success", txId: fakeTxId });
+        } else {
+          setPurchaseState({ stage: "error", message: "Could not finalize ticket" });
+        }
+      } catch (e) {
+        setPurchaseState({ stage: "error", message: (e as Error).message });
+      }
+      return;
+    }
+
+    const escrow = network === "mainnet" ? ESCROW_MAINNET : ESCROW_TESTNET;
+    if (!escrow) {
+      setPurchaseState({
+        stage: "error",
+        message: "Escrow address not configured for this network",
+      });
+      return;
+    }
+
+    const microStx = Math.round(event.price * 1_000_000).toString();
+    const stacksNetwork = network === "mainnet" ? new StacksMainnet() : new StacksTestnet();
+
+    setPurchaseState({ stage: "signing" });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        openSTXTransfer({
+          recipient: escrow,
+          amount: microStx,
+          memo: `veritix:${event.id}`,
+          network: stacksNetwork,
+          appDetails: { name: "Veritix", icon: `${window.location.origin}/favicon.png` },
+          onFinish: async (data) => {
+            const txId = data.txId.startsWith("0x") ? data.txId : `0x${data.txId}`;
+            setPurchaseState({ stage: "pending", txId });
+            try {
+              await pollPurchase(event.id, txId, network);
+              setPurchaseState({ stage: "success", txId });
+              resolve();
+            } catch (e) {
+              setPurchaseState({ stage: "error", message: (e as Error).message });
+              reject(e);
+            }
+          },
+          onCancel: () => {
+            setPurchaseState({ stage: "idle" });
+            reject(new Error("Cancelled"));
+          },
+        });
+      });
+    } catch {
+      // already surfaced via state
+    }
+  };
+
+  if (loading) {
+    return <div className="container-page text-slate-500">Loading event…</div>;
+  }
 
   if (!event) {
     return (
       <div className="container-page">
         <div className="card p-10 text-center">
           <h2 className="font-semibold text-lg">Event not found</h2>
-          <p className="text-slate-600 mt-1.5">
-            We couldn't find that event.
-          </p>
+          <p className="text-slate-600 mt-1.5">We couldn&apos;t find that event.</p>
           <Link href="/events" className="btn-primary mt-5">
             Back to events
           </Link>
@@ -33,21 +131,14 @@ export default function EventDetailPage() {
 
   return (
     <div className="container-page">
-      <Link
-        href="/events"
-        className="text-sm text-slate-500 hover:text-slate-800"
-      >
+      <Link href="/events" className="text-sm text-slate-500 hover:text-slate-800">
         ← Back to events
       </Link>
 
       <div className="mt-4 card overflow-hidden">
         <div className="relative aspect-[21/9] bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={event.image}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
+          <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
         </div>
       </div>
 
@@ -71,11 +162,7 @@ export default function EventDetailPage() {
                 })}
               </div>
               <div>
-                🕒{" "}
-                {date.toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                🕒 {date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
               </div>
               <div>📍 {event.location}</div>
             </div>
@@ -86,22 +173,6 @@ export default function EventDetailPage() {
             <p className="text-slate-700 leading-relaxed mt-3 whitespace-pre-line">
               {event.description}
             </p>
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-brand-50 to-white">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-100 grid place-items-center text-brand-700">
-                🔗
-              </div>
-              <div>
-                <h3 className="font-semibold">Blockchain-backed ticket</h3>
-                <p className="text-sm text-slate-600 mt-1">
-                  Your ticket will be minted as an NFT on the Stacks blockchain.
-                  That means you fully own it, can verify it instantly at the
-                  door, and it can't be duplicated or counterfeited.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -127,62 +198,77 @@ export default function EventDetailPage() {
                 className="h-full bg-brand-500"
                 style={{
                   width: `${
-                    ((event.ticketsTotal - event.ticketsLeft) /
-                      event.ticketsTotal) *
-                    100
+                    ((event.ticketsTotal - event.ticketsLeft) / event.ticketsTotal) * 100
                   }%`,
                 }}
               />
             </div>
 
             <button
-              onClick={() => (isConnected ? setShowModal(true) : connect())}
-              disabled={soldOut}
+              onClick={handleBuy}
+              disabled={
+                soldOut ||
+                purchaseState.stage === "signing" ||
+                purchaseState.stage === "pending"
+              }
               className="btn-primary w-full mt-6 !py-3 text-base"
             >
               {soldOut
                 ? "Sold out"
-                : isConnected
+                : purchaseState.stage === "signing"
+                ? "Waiting for wallet…"
+                : purchaseState.stage === "pending"
+                ? "Confirming on chain…"
+                : purchaseState.stage === "success"
+                ? "Ticket purchased ✓"
+                : isAuthed
                 ? "Buy Ticket"
+                : isConnected
+                ? "Sign in & Buy"
                 : "Connect Wallet to Buy"}
             </button>
+
+            {purchaseState.stage === "error" && (
+              <div className="mt-3 text-sm text-red-600">{purchaseState.message}</div>
+            )}
+            {purchaseState.stage === "pending" && (
+              <div className="mt-3 text-xs text-slate-500">
+                tx {purchaseState.txId.slice(0, 10)}…
+              </div>
+            )}
+            {purchaseState.stage === "success" && (
+              <Link
+                href="/my-tickets"
+                className="mt-3 block text-center text-sm text-brand-700 hover:underline"
+              >
+                View your ticket →
+              </Link>
+            )}
 
             <div className="mt-5 pt-5 border-t border-slate-100 text-sm">
               <div className="text-xs text-slate-500">Organizer</div>
               <div className="font-mono text-slate-800 mt-0.5">
-                {shortAddr(event.organizer)}
+                {shortAddress(event.organizer)}
               </div>
             </div>
           </div>
         </aside>
       </div>
-
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="card max-w-md w-full p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-3xl">🔌</div>
-            <h3 className="mt-3 font-semibold text-lg">
-              Wallet integration coming soon
-            </h3>
-            <p className="text-slate-600 mt-2 text-sm">
-              Wallet and ticket purchase integration will be added later. For
-              now, this is a frontend-only preview.
-            </p>
-            <button
-              onClick={() => setShowModal(false)}
-              className="btn-primary w-full mt-5"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
+}
+
+async function pollPurchase(
+  eventId: string,
+  txId: string,
+  network: "testnet" | "mainnet",
+) {
+  const start = Date.now();
+  const timeoutMs = 5 * 60 * 1000;
+  while (Date.now() - start < timeoutMs) {
+    const res = await purchaseTicket({ eventId, txId, network });
+    if (res?.ticket?.status === "Valid") return;
+    await new Promise((r) => setTimeout(r, 8_000));
+  }
+  throw new Error("Confirmation timed out. Your ticket will appear once the tx confirms.");
 }
