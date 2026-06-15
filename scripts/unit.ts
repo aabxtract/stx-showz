@@ -57,7 +57,6 @@ test("converts Decimal price to string and computes ticketsLeft", () => {
     organizerId: "u1",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-02T00:00:00Z"),
-    // @ts-expect-error organizer is optional
     organizer: { address: "SP1", name: null },
   });
   assert.equal(out.price, "12.5");
