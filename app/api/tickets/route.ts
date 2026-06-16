@@ -64,7 +64,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "txId already used" }, { status: 409 });
   }
 
-  const devBypass = process.env.DEV_PAYMENT_BYPASS === "true";
+  const devBypass =
+    process.env.NODE_ENV !== "production" && process.env.DEV_PAYMENT_BYPASS === "true";
+
+  const escrow = (
+    network === "mainnet"
+      ? process.env.ESCROW_ADDRESS_MAINNET
+      : process.env.ESCROW_ADDRESS_TESTNET
+  )?.trim();
+
+  if (!escrow) {
+    console.error(
+      `[tickets] Missing escrow address for network=${network}. ` +
+        `Set ESCROW_ADDRESS_${network.toUpperCase()} before accepting purchases.`,
+    );
+    return NextResponse.json(
+      { error: "Escrow wallet is not configured. Please contact support." },
+      { status: 503 },
+    );
+  }
 
   const check = devBypass
     ? ({ ok: true, status: "confirmed", sender: session.address } as const)
@@ -78,11 +96,6 @@ export async function POST(req: Request) {
   if (!check.ok && check.status === "failed") {
     return NextResponse.json({ error: check.reason }, { status: 400 });
   }
-
-  const escrow =
-    (network === "mainnet"
-      ? process.env.ESCROW_ADDRESS_MAINNET
-      : process.env.ESCROW_ADDRESS_TESTNET) || (devBypass ? "dev-bypass" : "");
 
   if (existing) {
     if (existing.status === "Valid") {
