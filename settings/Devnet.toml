@@ -1,0 +1,33 @@
+[network]
+name = "devnet"
+deployment_fee_rate = 10
+
+[accounts.deployer]
+mnemonic = "twice kind fence tip hidden tilt action fragile skin nothing glory cousin green tomorrow spring wrist shed math olympic multiply hip blue scout claw"
+balance = 100_000_000_000_000
+
+[accounts.wallet_1]
+mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt pave pen trash pretty park cube fragile gadget go nerve trial drum"
+balance = 100_000_000_000_000
+
+[accounts.wallet_2]
+mnemonic = "hold excess usual excess ring elephant install account glad dry fragile donkey gaze humble truck breeze nation gasp vacuum limb head keep delay hospital"
+balance = 100_000_000_000_000
+
+[devnet]
+disable_stacks_explorer = false
+disable_stacks_api = false
+stacks_node_image_url = "hirosystems/stacks-node:devnet-3.1.0.0.7"
+stacks_api_image_url = "hirosystems/stacks-blockchain-api:8.1.1"
+stacks_explorer_image_url = "hirosystems/explorer:1.181.1"
+bitcoin_node_image_url = "quay.io/hirosystems/bitcoind:26.0"
+bitcoin_explorer_image_url = "quay.io/hirosystems/bitcoin-explorer:devnet"
+epoch_2_0 = 100
+epoch_2_05 = 102
+epoch_2_1 = 106
+epoch_2_2 = 108
+epoch_2_3 = 110
+epoch_2_4 = 112
+epoch_2_5 = 114
+epoch_3_0 = 116
+epoch_3_1 = 122

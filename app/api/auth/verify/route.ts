@@ -33,9 +33,15 @@ export async function POST(req: Request) {
 
   const message = buildSignInMessage({ address, nonce: record.nonce, issuedAt });
 
-  const devBypass = process.env.DEV_AUTH_BYPASS === "true";
+  const devBypass =
+    process.env.NODE_ENV !== "production" && process.env.DEV_AUTH_BYPASS === "true";
 
-  if (!devBypass) {
+  if (devBypass) {
+    console.warn(
+      `[auth/verify] DEV_AUTH_BYPASS active — skipping signature check for ${address}. ` +
+        `This is only allowed outside production.`,
+    );
+  } else {
     const network = process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet";
 
     const derivedAddress = getAddressFromPublicKey(publicKey, network);
