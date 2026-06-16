@@ -1,0 +1,18 @@
+---
+id: 0
+name: Testnet deployment
+network: testnet
+stacks-node: "https://api.testnet.hiro.so"
+bitcoin-node: "http://bitcoind.testnet.stacks.co:18332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: event-registry
+            expected-sender: ST000000000000000000002AMW42H
+            cost: 50000
+            path: contracts/event-registry.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.0"

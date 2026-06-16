@@ -4,3 +4,15 @@ out
 .env*
 !.env.example
 .DS_Store
+
+# Clarinet
+.cache/
+.clarinet/
+settings/Testnet.toml
+settings/Mainnet.toml
+settings/Clarinet.toml
+
+# Generated mainnet interaction artifacts
+scripts/generated-wallets.json
+scripts/spam-log-*.json
+

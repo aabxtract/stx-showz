@@ -1,0 +1,18 @@
+---
+id: 0
+name: Mainnet deployment
+network: mainnet
+stacks-node: "https://api.hiro.so"
+bitcoin-node: "http://bitcoin.mainnet.stacks.co:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: event-registry
+            expected-sender: SP3JRJTXR5JS74DKHW9EHEB4WB7B0MMZ3X9SBD3FJ
+            cost: 100000
+            path: contracts/event-registry.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.0"

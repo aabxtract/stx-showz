@@ -1,0 +1,21 @@
+[project]
+name = "stx-showz"
+description = "On-chain event registry for stx-showz"
+authors = []
+telemetry = false
+cache_dir = ".cache"
+requirements = []
+
+[contracts.event-registry]
+path = "contracts/event-registry.clar"
+clarity_version = 3
+epoch = 3.0
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
