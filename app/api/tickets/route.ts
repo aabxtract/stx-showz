@@ -63,6 +63,12 @@ export async function POST(req: Request) {
   if (existing && existing.ownerId !== session.userId) {
     return NextResponse.json({ error: "txId already used" }, { status: 409 });
   }
+  if (existing && existing.eventId !== eventId) {
+    return NextResponse.json(
+      { error: "txId already used for a different event" },
+      { status: 409 },
+    );
+  }
 
   const devBypass =
     process.env.NODE_ENV !== "production" && process.env.DEV_PAYMENT_BYPASS === "true";
@@ -103,6 +109,14 @@ export async function POST(req: Request) {
     }
     if (check.ok) {
       const updated = await prisma.$transaction(async (tx) => {
+        const flipped = await tx.ticket.updateMany({
+          where: { txId, ownerId: session.userId, eventId, status: "Pending" },
+          data: { status: "Valid", txStatus: "confirmed" },
+        });
+        if (flipped.count === 0) {
+          // Another request already validated this ticket; report current state without double-incrementing.
+          return tx.ticket.findUnique({ where: { txId } });
+        }
         const incremented = await tx.event.updateMany({
           where: { id: eventId, ticketsSold: { lt: event.ticketsTotal } },
           data: { ticketsSold: { increment: 1 } },
@@ -110,11 +124,11 @@ export async function POST(req: Request) {
         if (incremented.count === 0) {
           throw new Error("SOLD_OUT");
         }
-        return tx.ticket.update({
-          where: { txId },
-          data: { status: "Valid", txStatus: "confirmed" },
-        });
+        return tx.ticket.findUnique({ where: { txId } });
       });
+      if (!updated) {
+        return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+      }
       return NextResponse.json({ ticket: serializeTicket(updated) });
     }
     return NextResponse.json({ ticket: serializeTicket(existing) });
