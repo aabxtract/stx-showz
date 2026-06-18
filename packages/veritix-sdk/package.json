@@ -1,0 +1,66 @@
+{
+  "name": "veritix-sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for the Veritix event ticketing platform on Stacks blockchain",
+  "author": "Veritix",
+  "license": "MIT",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "veritix",
+    "stacks",
+    "stx",
+    "ticketing",
+    "web3",
+    "events",
+    "blockchain",
+    "nft",
+    "ticket",
+    "event-management"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "@stacks/transactions": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@stacks/transactions": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@stacks/transactions": "^7.4.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.5.3",
+    "vitest": "^3.2.3"
+  }
+}

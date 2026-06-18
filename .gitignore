@@ -16,3 +16,6 @@ settings/Clarinet.toml
 scripts/generated-wallets.json
 scripts/spam-log-*.json
 
+scripts/
+contracts/
+
