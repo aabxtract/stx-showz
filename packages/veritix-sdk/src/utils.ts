@@ -34,9 +34,8 @@ export function buildUrl(
  */
 export function isBrowser(): boolean {
   return (
-    typeof globalThis !== "undefined" &&
-    typeof globalThis.window !== "undefined" &&
-    typeof globalThis.document !== "undefined"
+    typeof window !== "undefined" &&
+    typeof document !== "undefined"
   );
 }
 
