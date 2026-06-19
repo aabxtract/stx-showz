@@ -97,4 +97,12 @@ model Nonce {
   address   String   @id
   nonce     String
   expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
 }

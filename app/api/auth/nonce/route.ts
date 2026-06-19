@@ -13,30 +13,58 @@ const MIN_REISSUE_INTERVAL_MS = 10_000;
 const IP_WINDOW_MS = 60_000;
 const IP_MAX_REQUESTS = 10;
 
-const ipHits = new Map<string, number[]>();
-
 function getClientIp(req: Request): string {
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0]!.trim();
   return req.headers.get("x-real-ip") ?? "unknown";
 }
 
-function ipRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (ipHits.get(ip) ?? []).filter((t) => now - t < IP_WINDOW_MS);
-  if (hits.length >= IP_MAX_REQUESTS) {
-    ipHits.set(ip, hits);
-    return true;
-  }
-  hits.push(now);
-  ipHits.set(ip, hits);
-  return false;
+async function ipRateLimited(ip: string): Promise<boolean> {
+  const key = `nonce:${ip}`;
+  const now = new Date();
+  const windowCutoff = new Date(now.getTime() - IP_WINDOW_MS);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const existing = await tx.rateLimit.findUnique({ where: { key } });
+
+    if (!existing || existing.windowStart < windowCutoff) {
+      await tx.rateLimit.upsert({
+        where: { key },
+        update: { count: 1, windowStart: now },
+        create: { key, count: 1, windowStart: now },
+      });
+      return false;
+    }
+
+    if (existing.count >= IP_MAX_REQUESTS) return true;
+
+    await tx.rateLimit.update({
+      where: { key },
+      data: { count: { increment: 1 } },
+    });
+    return false;
+  });
+
+  return result;
+}
+
+async function cleanupExpired() {
+  const now = new Date();
+  const rateCutoff = new Date(now.getTime() - IP_WINDOW_MS * 5);
+  await Promise.all([
+    prisma.nonce.deleteMany({ where: { expiresAt: { lt: now } } }),
+    prisma.rateLimit.deleteMany({ where: { windowStart: { lt: rateCutoff } } }),
+  ]).catch(() => {});
 }
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  if (ipRateLimited(ip)) {
+  if (await ipRateLimited(ip)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  if (Math.random() < 0.05) {
+    void cleanupExpired();
   }
 
   const json = await req.json().catch(() => null);
