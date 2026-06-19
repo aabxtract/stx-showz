@@ -91,3 +91,13 @@ export class VeritixServiceError extends VeritixError {
     this.name = "VeritixServiceError";
   }
 }
+
+/**
+ * Thrown when a request exceeds the configured timeout.
+ */
+export class VeritixTimeoutError extends VeritixError {
+  constructor(message = "Request timed out", details?: unknown) {
+    super(message, 0, "TIMEOUT", details);
+    this.name = "VeritixTimeoutError";
+  }
+}

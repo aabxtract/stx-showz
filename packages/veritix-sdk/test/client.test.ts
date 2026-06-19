@@ -8,6 +8,7 @@ import {
   VeritixRateLimitError,
   VeritixForbiddenError,
   VeritixServiceError,
+  VeritixTimeoutError,
   VeritixError,
 } from "../src/errors";
 import {
@@ -24,12 +25,19 @@ import {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function mockFetch(status: number, body: unknown): typeof globalThis.fetch {
-  return vi.fn().mockResolvedValue({
+function mockResponse(status: number, body: unknown, headers: HeadersInit = {}): Response {
+  return {
     ok: status >= 200 && status < 300,
     status,
     statusText: `Status ${status}`,
+    headers: new Headers(headers),
     json: () => Promise.resolve(body),
+  } as Response;
+}
+
+function mockFetch(status: number, body: unknown, headers: HeadersInit = {}): typeof globalThis.fetch {
+  return vi.fn().mockResolvedValue({
+    ...mockResponse(status, body, headers),
   }) as unknown as typeof globalThis.fetch;
 }
 
@@ -38,6 +46,7 @@ function createClient(fetchFn: typeof globalThis.fetch): VeritixClient {
     baseUrl: "https://api.test.veritix.app",
     token: "test-jwt-token",
     fetch: fetchFn,
+    maxRetries: 0,
   });
 }
 
@@ -196,6 +205,33 @@ describe("EventsClient", () => {
     expect(result.total).toBe(1);
   });
 
+  it("listAll auto-paginates through all events", async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(mockResponse(200, {
+        events: [{ ...sampleEvent, id: "e1" }],
+        total: 3,
+        limit: 2,
+        offset: 0,
+      }))
+      .mockResolvedValueOnce(mockResponse(200, {
+        events: [{ ...sampleEvent, id: "e2" }, { ...sampleEvent, id: "e3" }],
+        total: 3,
+        limit: 2,
+        offset: 1,
+      }));
+    const client = createClient(fetchFn as unknown as typeof globalThis.fetch);
+
+    const events = [];
+    for await (const event of client.events.listAll({ category: "Music", limit: 2 })) {
+      events.push(event);
+    }
+
+    expect(events.map((event) => event.id)).toEqual(["e1", "e2", "e3"]);
+    const [secondUrl] = fetchFn.mock.calls[1] as [string];
+    expect(secondUrl).toContain("offset=1");
+  });
+
   it("get sends GET to /api/events/:id", async () => {
     const fetchFn = mockFetch(200, { event: sampleEvent });
     const client = createClient(fetchFn);
@@ -254,6 +290,23 @@ describe("EventsClient", () => {
 // ─── Tickets Client ──────────────────────────────────────────────────────────
 
 describe("TicketsClient", () => {
+  const sampleTicket = {
+    id: "t1",
+    eventId: "e1",
+    eventTitle: "Test Event",
+    eventDate: "2026-08-01T00:00:00Z",
+    location: "Lagos",
+    image: "https://img.test/1.jpg",
+    eventStatus: "Active",
+    txId: "0xabc",
+    txStatus: "confirmed",
+    amountStx: "5.0",
+    network: "testnet",
+    status: "Valid",
+    usedAt: null,
+    createdAt: "2026-01-01T00:00:00Z",
+  };
+
   it("purchase sends POST", async () => {
     const fetchFn = mockFetch(201, { ticket: { id: "t1", status: "Valid" }, pending: false });
     const client = createClient(fetchFn);
@@ -280,6 +333,32 @@ describe("TicketsClient", () => {
     expect(url).toBe("https://api.test.veritix.app/api/tickets/me");
     expect(init.method).toBe("GET");
     expect(tickets).toHaveLength(2);
+  });
+
+  it("get fetches a single ticket when the direct endpoint is available", async () => {
+    const fetchFn = mockFetch(200, { ticket: sampleTicket });
+    const client = createClient(fetchFn);
+
+    const ticket = await client.tickets.get("t1");
+
+    const [url] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+    expect(url).toBe("https://api.test.veritix.app/api/tickets/t1");
+    expect(ticket.id).toBe("t1");
+  });
+
+  it("get falls back to the current user's tickets when the direct endpoint is unavailable", async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(mockResponse(404, { error: "Not found" }))
+      .mockResolvedValueOnce(mockResponse(200, { tickets: [sampleTicket] }));
+    const client = createClient(fetchFn as unknown as typeof globalThis.fetch);
+
+    const ticket = await client.tickets.get("t1");
+
+    expect(ticket.id).toBe("t1");
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    const [fallbackUrl] = fetchFn.mock.calls[1] as [string];
+    expect(fallbackUrl).toBe("https://api.test.veritix.app/api/tickets/me");
   });
 });
 
@@ -365,6 +444,95 @@ describe("Request configuration", () => {
     const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
     const headers = new Headers(init.headers);
     expect(headers.get("X-Custom")).toBe("value");
+  });
+
+  it("retries transient responses with exponential backoff", async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(mockResponse(503, { error: "Try again" }))
+      .mockResolvedValueOnce(mockResponse(429, { error: "Slow down" }))
+      .mockResolvedValueOnce(mockResponse(200, { events: [], total: 0, limit: 50, offset: 0 }));
+    const client = new VeritixClient({
+      baseUrl: "https://api.test.veritix.app",
+      fetch: fetchFn as unknown as typeof globalThis.fetch,
+      retryDelay: 1,
+      maxRetries: 2,
+    });
+
+    const result = await client.events.list();
+
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+    expect(result.events).toEqual([]);
+  });
+
+  it("respects Retry-After when retrying", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchFn = vi
+        .fn()
+        .mockResolvedValueOnce(mockResponse(429, { error: "Slow down" }, { "Retry-After": "2" }))
+        .mockResolvedValueOnce(mockResponse(200, { events: [], total: 0, limit: 50, offset: 0 }));
+      const client = new VeritixClient({
+        baseUrl: "https://api.test.veritix.app",
+        fetch: fetchFn as unknown as typeof globalThis.fetch,
+        retryDelay: 1,
+        maxRetries: 1,
+      });
+
+      const promise = client.events.list();
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+
+      await expect(promise).resolves.toEqual({ events: [], total: 0, limit: 50, offset: 0 });
+      expect(fetchFn).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("throws VeritixTimeoutError when a request times out", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchFn = vi.fn(
+        () => new Promise<Response>(() => undefined),
+      ) as unknown as typeof globalThis.fetch;
+      const client = new VeritixClient({
+        baseUrl: "https://api.test.veritix.app",
+        fetch: fetchFn,
+        timeout: 100,
+      });
+
+      const promise = expect(client.events.list()).rejects.toThrow(VeritixTimeoutError);
+      await vi.advanceTimersByTimeAsync(100);
+      await promise;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("calls request and response interceptors for each attempt", async () => {
+    const onRequest = vi.fn();
+    const onResponse = vi.fn();
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(mockResponse(503, { error: "Try again" }))
+      .mockResolvedValueOnce(mockResponse(200, { events: [], total: 0, limit: 50, offset: 0 }));
+    const client = new VeritixClient({
+      baseUrl: "https://api.test.veritix.app",
+      fetch: fetchFn as unknown as typeof globalThis.fetch,
+      retryDelay: 0,
+      maxRetries: 1,
+      onRequest,
+      onResponse,
+    });
+
+    await client.events.list();
+
+    expect(onRequest).toHaveBeenCalledTimes(2);
+    expect(onResponse).toHaveBeenCalledTimes(2);
+    expect(onRequest.mock.calls[0][0]).toContain("/api/events");
+    expect(onResponse.mock.calls[0][1].status).toBe(503);
   });
 });
 

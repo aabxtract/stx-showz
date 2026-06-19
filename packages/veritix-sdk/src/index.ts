@@ -44,6 +44,7 @@ export {
   VeritixRateLimitError,
   VeritixValidationError,
   VeritixServiceError,
+  VeritixTimeoutError,
 } from "./errors";
 
 // ─── Stacks Helpers ──────────────────────────────────────────────────────────

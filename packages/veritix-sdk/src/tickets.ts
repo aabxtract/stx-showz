@@ -4,6 +4,7 @@ import type {
   PurchaseTicketInput,
   PurchaseTicketResponse,
 } from "./types";
+import { VeritixNotFoundError } from "./errors";
 
 /**
  * Ticket operations — purchasing and viewing owned tickets.
@@ -64,5 +65,32 @@ export class TicketsClient {
   async mine(): Promise<Ticket[]> {
     const data = await this.client.get<{ tickets: Ticket[] }>("/api/tickets/me");
     return data.tickets;
+  }
+
+  /**
+   * Get a single ticket by ID.
+   *
+   * Uses `GET /api/tickets/:id` when the API supports it. If that route is
+   * unavailable, falls back to searching the authenticated user's tickets.
+   *
+   * @param id - The ticket ID
+   * @returns The matching ticket
+   * @throws {VeritixNotFoundError} If the ticket does not exist or is not owned by the current user
+   */
+  async get(id: string): Promise<Ticket> {
+    try {
+      const data = await this.client.get<{ ticket: Ticket }>(`/api/tickets/${encodeURIComponent(id)}`);
+      return data.ticket;
+    } catch (error) {
+      if (!(error instanceof VeritixNotFoundError)) {
+        throw error;
+      }
+    }
+
+    const ticket = (await this.mine()).find((item) => item.id === id);
+    if (!ticket) {
+      throw new VeritixNotFoundError("Ticket not found");
+    }
+    return ticket;
   }
 }

@@ -51,6 +51,12 @@ var VeritixServiceError = class extends VeritixError {
     this.name = "VeritixServiceError";
   }
 };
+var VeritixTimeoutError = class extends VeritixError {
+  constructor(message = "Request timed out", details) {
+    super(message, 0, "TIMEOUT", details);
+    this.name = "VeritixTimeoutError";
+  }
+};
 
 // src/utils.ts
 function buildUrl(baseUrl, path, params) {
@@ -151,6 +157,33 @@ var EventsClient = class {
     return this.client.get("/api/events", query);
   }
   /**
+   * Iterate through all events that match the provided filters.
+   *
+   * Automatically requests subsequent pages until all available events
+   * have been yielded.
+   *
+   * @param params - Filter and pagination options. `limit` controls page size.
+   */
+  async *listAll(params = {}) {
+    const limit = params.limit ?? 50;
+    let offset = params.offset ?? 0;
+    let yielded = 0;
+    while (true) {
+      const page = await this.list({ ...params, limit, offset });
+      if (page.events.length === 0) {
+        return;
+      }
+      for (const event of page.events) {
+        yield event;
+        yielded += 1;
+      }
+      offset += page.events.length;
+      if (yielded >= page.total) {
+        return;
+      }
+    }
+  }
+  /**
    * Get a single event by ID.
    *
    * @param id - The event ID
@@ -248,6 +281,31 @@ var TicketsClient = class {
   async mine() {
     const data = await this.client.get("/api/tickets/me");
     return data.tickets;
+  }
+  /**
+   * Get a single ticket by ID.
+   *
+   * Uses `GET /api/tickets/:id` when the API supports it. If that route is
+   * unavailable, falls back to searching the authenticated user's tickets.
+   *
+   * @param id - The ticket ID
+   * @returns The matching ticket
+   * @throws {VeritixNotFoundError} If the ticket does not exist or is not owned by the current user
+   */
+  async get(id) {
+    try {
+      const data = await this.client.get(`/api/tickets/${encodeURIComponent(id)}`);
+      return data.ticket;
+    } catch (error) {
+      if (!(error instanceof VeritixNotFoundError)) {
+        throw error;
+      }
+    }
+    const ticket = (await this.mine()).find((item) => item.id === id);
+    if (!ticket) {
+      throw new VeritixNotFoundError("Ticket not found");
+    }
+    return ticket;
   }
 };
 
@@ -355,6 +413,9 @@ var VeritixClient = class {
     this.config = {
       ...config,
       baseUrl: config.baseUrl.replace(/\/+$/, ""),
+      maxRetries: config.maxRetries ?? 3,
+      retryDelay: config.retryDelay ?? 1e3,
+      timeout: config.timeout ?? 3e4,
       fetchFn: config.fetch ?? globalThis.fetch.bind(globalThis)
     };
   }
@@ -452,11 +513,22 @@ var VeritixClient = class {
     if (!credentials && !this.config.token && isBrowser()) {
       credentials = "include";
     }
-    const response = await this.config.fetchFn(url, {
+    const requestInit = {
       ...init,
       headers,
       credentials
-    });
+    };
+    let response;
+    for (let attempt = 0; attempt <= this.config.maxRetries; attempt += 1) {
+      response = await this.fetchWithTimeout(url, requestInit);
+      if (!this.shouldRetry(response, attempt)) {
+        break;
+      }
+      await this.delay(this.getRetryDelay(response, attempt));
+    }
+    if (!response) {
+      throw new VeritixError("Request failed", 0, "REQUEST_FAILED");
+    }
     if (!response.ok) {
       await this.handleErrorResponse(response);
     }
@@ -464,6 +536,62 @@ var VeritixClient = class {
       return void 0;
     }
     return await response.json();
+  }
+  async fetchWithTimeout(url, init) {
+    const timeout = this.config.timeout;
+    const controller = timeout > 0 ? new AbortController() : void 0;
+    const requestInit = {
+      ...init,
+      signal: controller?.signal ?? init.signal
+    };
+    await this.config.onRequest?.(url, requestInit);
+    let timeoutId;
+    try {
+      const fetchPromise = this.config.fetchFn(url, requestInit);
+      const response = timeout > 0 ? await Promise.race([
+        fetchPromise,
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            controller?.abort();
+            reject(
+              new VeritixTimeoutError(`Request timed out after ${timeout}ms`, {
+                timeout
+              })
+            );
+          }, timeout);
+        })
+      ]) : await fetchPromise;
+      await this.config.onResponse?.(url, response);
+      return response;
+    } catch (error) {
+      if (error instanceof VeritixTimeoutError) {
+        throw error;
+      }
+      if (isAbortError(error)) {
+        throw new VeritixTimeoutError(`Request timed out after ${timeout}ms`, { timeout });
+      }
+      throw error;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+  shouldRetry(response, attempt) {
+    return attempt < this.config.maxRetries && (response.status === 429 || response.status === 503);
+  }
+  getRetryDelay(response, attempt) {
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter) {
+      const delay = parseRetryAfter(retryAfter);
+      if (delay !== void 0) {
+        return delay;
+      }
+    }
+    return this.config.retryDelay * 2 ** attempt;
+  }
+  delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
   async handleErrorResponse(response) {
     let body = null;
@@ -493,6 +621,20 @@ var VeritixClient = class {
     }
   }
 };
+function parseRetryAfter(value) {
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1e3;
+  }
+  const date = Date.parse(value);
+  if (!Number.isNaN(date)) {
+    return Math.max(0, date - Date.now());
+  }
+  return void 0;
+}
+function isAbortError(error) {
+  return error instanceof DOMException ? error.name === "AbortError" : error instanceof Error && error.name === "AbortError";
+}
 
 // src/stacks.ts
 var ESCROW_ADDRESSES = {
@@ -545,6 +687,6 @@ function buildSignInMessage(params) {
   ].join("\n");
 }
 
-export { AuthClient, EventsClient, OrganizerClient, TicketsClient, UsersClient, VeritixAuthError, VeritixClient, VeritixConflictError, VeritixError, VeritixForbiddenError, VeritixNotFoundError, VeritixRateLimitError, VeritixServiceError, VeritixValidationError, buildSignInMessage, buildTicketTransfer, getEscrowAddress, microStxToStx, setEscrowAddresses, stxToMicroStx };
+export { AuthClient, EventsClient, OrganizerClient, TicketsClient, UsersClient, VeritixAuthError, VeritixClient, VeritixConflictError, VeritixError, VeritixForbiddenError, VeritixNotFoundError, VeritixRateLimitError, VeritixServiceError, VeritixTimeoutError, VeritixValidationError, buildSignInMessage, buildTicketTransfer, getEscrowAddress, microStxToStx, setEscrowAddresses, stxToMicroStx };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

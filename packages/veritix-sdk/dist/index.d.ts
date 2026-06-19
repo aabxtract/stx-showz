@@ -202,6 +202,30 @@ interface VeritixConfig {
      */
     headers?: Record<string, string>;
     /**
+     * Maximum number of retries for transient HTTP responses (429, 503).
+     * Defaults to 3.
+     */
+    maxRetries?: number;
+    /**
+     * Base retry delay in milliseconds. Exponential backoff is applied per retry.
+     * Defaults to 1000.
+     */
+    retryDelay?: number;
+    /**
+     * Request timeout in milliseconds.
+     * Defaults to 30000. Set to 0 to disable SDK-managed timeouts.
+     */
+    timeout?: number;
+    /**
+     * Optional hook invoked before each request attempt.
+     * Useful for logging, analytics, or mutating request init before fetch.
+     */
+    onRequest?: (url: string, init: RequestInit) => void | Promise<void>;
+    /**
+     * Optional hook invoked after each response is received.
+     */
+    onResponse?: (url: string, response: Response) => void | Promise<void>;
+    /**
      * Optional custom `fetch` implementation.
      * Useful for testing or environments without a global `fetch`.
      */
@@ -321,6 +345,15 @@ declare class EventsClient {
      */
     list(params?: ListEventsParams): Promise<ListEventsResponse>;
     /**
+     * Iterate through all events that match the provided filters.
+     *
+     * Automatically requests subsequent pages until all available events
+     * have been yielded.
+     *
+     * @param params - Filter and pagination options. `limit` controls page size.
+     */
+    listAll(params?: ListEventsParams): AsyncGenerator<VeritixEvent>;
+    /**
      * Get a single event by ID.
      *
      * @param id - The event ID
@@ -417,6 +450,17 @@ declare class TicketsClient {
      * @throws {VeritixAuthError} If not authenticated
      */
     mine(): Promise<Ticket[]>;
+    /**
+     * Get a single ticket by ID.
+     *
+     * Uses `GET /api/tickets/:id` when the API supports it. If that route is
+     * unavailable, falls back to searching the authenticated user's tickets.
+     *
+     * @param id - The ticket ID
+     * @returns The matching ticket
+     * @throws {VeritixNotFoundError} If the ticket does not exist or is not owned by the current user
+     */
+    get(id: string): Promise<Ticket>;
 }
 
 /**
@@ -601,6 +645,10 @@ declare class VeritixClient {
      */
     delete<T>(path: string): Promise<T>;
     private request;
+    private fetchWithTimeout;
+    private shouldRetry;
+    private getRetryDelay;
+    private delay;
     private handleErrorResponse;
 }
 
@@ -657,6 +705,12 @@ declare class VeritixValidationError extends VeritixError {
  * Thrown when the server is temporarily unavailable (HTTP 503).
  */
 declare class VeritixServiceError extends VeritixError {
+    constructor(message?: string, details?: unknown);
+}
+/**
+ * Thrown when a request exceeds the configured timeout.
+ */
+declare class VeritixTimeoutError extends VeritixError {
     constructor(message?: string, details?: unknown);
 }
 
@@ -753,4 +807,4 @@ declare function stxToMicroStx(stx: string | number): string;
  */
 declare function microStxToStx(microStx: string | number): string;
 
-export { type Activity, type Attendee, AuthClient, type AuthResponse, type BuildTransferOptions, type CreateEventInput, type EventCategory, type EventStatus, EventsClient, type ListEventsParams, type ListEventsResponse, type NonceResponse, OrganizerClient, type OrganizerEvent, type PurchaseTicketInput, type PurchaseTicketResponse, type RawTicket, type StacksNetworkName, type Ticket, type TicketStatus, TicketsClient, type UpdateEventInput, type UpdateProfileInput, type User, UsersClient, type VerifyAuthInput, type VerifyTicketResult, VeritixAuthError, VeritixClient, type VeritixConfig, VeritixConflictError, VeritixError, type VeritixEvent, VeritixForbiddenError, VeritixNotFoundError, VeritixRateLimitError, VeritixServiceError, VeritixValidationError, buildSignInMessage, buildTicketTransfer, getEscrowAddress, microStxToStx, setEscrowAddresses, stxToMicroStx };
+export { type Activity, type Attendee, AuthClient, type AuthResponse, type BuildTransferOptions, type CreateEventInput, type EventCategory, type EventStatus, EventsClient, type ListEventsParams, type ListEventsResponse, type NonceResponse, OrganizerClient, type OrganizerEvent, type PurchaseTicketInput, type PurchaseTicketResponse, type RawTicket, type StacksNetworkName, type Ticket, type TicketStatus, TicketsClient, type UpdateEventInput, type UpdateProfileInput, type User, UsersClient, type VerifyAuthInput, type VerifyTicketResult, VeritixAuthError, VeritixClient, type VeritixConfig, VeritixConflictError, VeritixError, type VeritixEvent, VeritixForbiddenError, VeritixNotFoundError, VeritixRateLimitError, VeritixServiceError, VeritixTimeoutError, VeritixValidationError, buildSignInMessage, buildTicketTransfer, getEscrowAddress, microStxToStx, setEscrowAddresses, stxToMicroStx };

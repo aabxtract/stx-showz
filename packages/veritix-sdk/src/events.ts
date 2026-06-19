@@ -59,6 +59,39 @@ export class EventsClient {
   }
 
   /**
+   * Iterate through all events that match the provided filters.
+   *
+   * Automatically requests subsequent pages until all available events
+   * have been yielded.
+   *
+   * @param params - Filter and pagination options. `limit` controls page size.
+   */
+  async *listAll(params: ListEventsParams = {}): AsyncGenerator<VeritixEvent> {
+    const limit = params.limit ?? 50;
+    let offset = params.offset ?? 0;
+    let yielded = 0;
+
+    while (true) {
+      const page = await this.list({ ...params, limit, offset });
+
+      if (page.events.length === 0) {
+        return;
+      }
+
+      for (const event of page.events) {
+        yield event;
+        yielded += 1;
+      }
+
+      offset += page.events.length;
+
+      if (yielded >= page.total) {
+        return;
+      }
+    }
+  }
+
+  /**
    * Get a single event by ID.
    *
    * @param id - The event ID

@@ -1,21 +1,23 @@
 import type { AppEvent } from "./types";
+import { VeritixClient, VeritixError } from "veritix-sdk";
+import type {
+  EventCategory,
+  PurchaseTicketResponse,
+  Ticket as SdkTicket,
+  VeritixEvent,
+  VerifyTicketResult,
+} from "veritix-sdk";
 
-interface ApiEvent {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  date: string;
-  location: string;
-  image: string;
-  price: string;
-  ticketsTotal: number;
-  ticketsSold: number;
-  ticketsLeft: number;
-  status: string;
-  organizerId: string;
-  organizer?: { address: string; name: string | null };
-}
+const veritix = new VeritixClient({
+  baseUrl: "/",
+  fetch: (input, init) => {
+    const method = init?.method?.toUpperCase() ?? "GET";
+    return fetch(input, {
+      ...init,
+      cache: method === "GET" ? "no-store" : init?.cache,
+    });
+  },
+});
 
 const statusFromApi: Record<string, AppEvent["status"]> = {
   Active: "Active",
@@ -24,7 +26,7 @@ const statusFromApi: Record<string, AppEvent["status"]> = {
   Ended: "Ended",
 };
 
-export function toAppEvent(e: ApiEvent): AppEvent {
+export function toAppEvent(e: VeritixEvent): AppEvent {
   return {
     id: e.id,
     title: e.title,
@@ -46,61 +48,30 @@ export async function fetchEvents(params: {
   q?: string;
   organizer?: string;
 } = {}): Promise<AppEvent[]> {
-  const search = new URLSearchParams();
-  if (params.category && params.category !== "All") search.set("category", params.category);
-  if (params.q) search.set("q", params.q);
-  if (params.organizer) search.set("organizer", params.organizer);
-  const qs = search.toString();
-  const res = await fetch(`/api/events${qs ? `?${qs}` : ""}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load events");
-  const data = (await res.json()) as { events: ApiEvent[] };
+  const data = await veritix.events.list({
+    category: params.category && params.category !== "All" ? params.category : undefined,
+    q: params.q,
+    organizer: params.organizer,
+  });
   return data.events.map(toAppEvent);
 }
 
 export async function fetchEvent(id: string): Promise<AppEvent> {
-  const res = await fetch(`/api/events/${id}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Event not found");
-  const data = (await res.json()) as { event: ApiEvent };
-  return toAppEvent(data.event);
+  return toAppEvent(await veritix.events.get(id));
 }
 
-export interface ApiTicket {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  eventDate: string;
-  location: string;
-  image: string;
-  eventStatus: string;
-  txId: string;
-  txStatus: string;
-  amountStx: string;
-  network: string;
-  status: "Pending" | "Valid" | "Used" | "Cancelled";
-  usedAt: string | null;
-  createdAt: string;
-}
+export type ApiTicket = SdkTicket;
 
 export async function fetchMyTickets(): Promise<ApiTicket[]> {
-  const res = await fetch(`/api/tickets/me`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load tickets");
-  const data = (await res.json()) as { tickets: ApiTicket[] };
-  return data.tickets;
+  return veritix.tickets.mine();
 }
 
 export async function purchaseTicket(input: {
   eventId: string;
   txId: string;
   network: "testnet" | "mainnet";
-}) {
-  const res = await fetch(`/api/tickets`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string }).error || "Purchase failed");
-  return data;
+}): Promise<PurchaseTicketResponse> {
+  return veritix.tickets.purchase(input);
 }
 
 export async function createEvent(input: {
@@ -113,25 +84,22 @@ export async function createEvent(input: {
   price: string;
   ticketsTotal: number;
 }): Promise<AppEvent> {
-  const res = await fetch(`/api/events`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+  const event = await veritix.events.create({
+    ...input,
+    category: input.category as EventCategory,
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string }).error || "Create failed");
-  return toAppEvent((data as { event: ApiEvent }).event);
+  return toAppEvent(event);
 }
 
-export async function verifyTicket(ticketId: string) {
-  const res = await fetch(`/api/organizer/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ticketId }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { ok: false as const, error: (data as { error?: string }).error || "Verify failed" };
+export async function verifyTicket(
+  ticketId: string,
+): Promise<VerifyTicketResult | { ok: false; error: string }> {
+  try {
+    return await veritix.organizer.verifyTicket(ticketId);
+  } catch (error) {
+    if (error instanceof VeritixError) {
+      return { ok: false, error: error.message || "Verify failed" };
+    }
+    return { ok: false, error: "Verify failed" };
   }
-  return { ok: true as const, ...(data as Record<string, unknown>) };
 }

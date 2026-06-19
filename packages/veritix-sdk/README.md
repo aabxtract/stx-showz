@@ -15,6 +15,7 @@
 - 🏷️ **Fully typed** — First-class TypeScript support with exported types
 - 🪶 **Zero dependencies** — Only `@stacks/transactions` as optional peer dep
 - 🌐 **Universal** — Works in Node.js 18+, browsers, Deno, and Bun
+- **Production-ready HTTP** - retries, timeouts, and request/response hooks
 
 ## Installation
 
@@ -77,6 +78,11 @@ const veritix = new VeritixClient({
   token?: string;            // JWT token for server-side auth
   credentials?: RequestCredentials; // Fetch credentials option
   headers?: Record<string, string>; // Custom headers
+  maxRetries?: number;       // Retry count for 429/503 responses (default: 3)
+  retryDelay?: number;       // Base retry delay in ms (default: 1000)
+  timeout?: number;          // Request timeout in ms (default: 30000)
+  onRequest?: (url: string, init: RequestInit) => void | Promise<void>;
+  onResponse?: (url: string, response: Response) => void | Promise<void>;
   fetch?: typeof fetch;      // Custom fetch implementation
 });
 ```
@@ -119,6 +125,11 @@ const { events, total } = await veritix.events.list({
   offset: 0,                // Pagination offset
 });
 
+// Iterate all matching events without manual pagination
+for await (const event of veritix.events.listAll({ category: 'Music' })) {
+  console.log(event.title);
+}
+
 // Get single event
 const event = await veritix.events.get('event-id');
 
@@ -156,6 +167,9 @@ const { ticket, pending } = await veritix.tickets.purchase({
 
 // List my tickets
 const tickets = await veritix.tickets.mine();
+
+// Fetch one ticket by ID
+const ticket = await veritix.tickets.get('ticket-id');
 ```
 
 ### Organizer Dashboard (`veritix.organizer`)
@@ -247,6 +261,7 @@ import {
   VeritixError,
   VeritixAuthError,
   VeritixNotFoundError,
+  VeritixTimeoutError,
   VeritixValidationError,
 } from 'veritix-sdk';
 
@@ -259,6 +274,8 @@ try {
     console.log('Please log in first');
   } else if (error instanceof VeritixValidationError) {
     console.log('Invalid input:', error.details);
+  } else if (error instanceof VeritixTimeoutError) {
+    console.log('Request timed out');
   } else if (error instanceof VeritixError) {
     console.log(`API error ${error.status}: ${error.message}`);
   }
@@ -274,7 +291,22 @@ try {
 | `VeritixConflictError` | 409 | Duplicate resource |
 | `VeritixRateLimitError` | 429 | Too many requests |
 | `VeritixServiceError` | 503 | Service unavailable |
+| `VeritixTimeoutError` | 0 | Request timeout |
 | `VeritixError` | Other | Generic API error |
+
+## Publishing
+
+Before publishing to npm:
+
+```bash
+npm run test
+npm run typecheck
+npm run build
+npm run pack:dry-run
+npm publish
+```
+
+The package publishes `dist`, `README.md`, and `LICENSE`.
 
 ## TypeScript
 

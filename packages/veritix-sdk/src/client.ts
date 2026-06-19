@@ -8,6 +8,7 @@ import {
   VeritixRateLimitError,
   VeritixValidationError,
   VeritixServiceError,
+  VeritixTimeoutError,
 } from "./errors";
 import { buildUrl, isBrowser } from "./utils";
 import { AuthClient } from "./auth";
@@ -35,7 +36,9 @@ import { UsersClient } from "./users";
  */
 export class VeritixClient {
   private readonly config: Required<
-    Pick<VeritixConfig, "baseUrl"> & { fetchFn: typeof globalThis.fetch }
+    Pick<VeritixConfig, "baseUrl" | "maxRetries" | "retryDelay" | "timeout"> & {
+      fetchFn: typeof globalThis.fetch;
+    }
   > &
     VeritixConfig;
 
@@ -53,6 +56,9 @@ export class VeritixClient {
     this.config = {
       ...config,
       baseUrl: config.baseUrl.replace(/\/+$/, ""),
+      maxRetries: config.maxRetries ?? 3,
+      retryDelay: config.retryDelay ?? 1000,
+      timeout: config.timeout ?? 30_000,
       fetchFn: config.fetch ?? globalThis.fetch.bind(globalThis),
     };
   }
@@ -173,11 +179,26 @@ export class VeritixClient {
       credentials = "include";
     }
 
-    const response = await this.config.fetchFn(url, {
+    const requestInit: RequestInit = {
       ...init,
       headers,
       credentials,
-    });
+    };
+
+    let response: Response | undefined;
+    for (let attempt = 0; attempt <= this.config.maxRetries; attempt += 1) {
+      response = await this.fetchWithTimeout(url, requestInit);
+
+      if (!this.shouldRetry(response, attempt)) {
+        break;
+      }
+
+      await this.delay(this.getRetryDelay(response, attempt));
+    }
+
+    if (!response) {
+      throw new VeritixError("Request failed", 0, "REQUEST_FAILED");
+    }
 
     if (!response.ok) {
       await this.handleErrorResponse(response);
@@ -189,6 +210,73 @@ export class VeritixClient {
     }
 
     return (await response.json()) as T;
+  }
+
+  private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+    const timeout = this.config.timeout;
+    const controller = timeout > 0 ? new AbortController() : undefined;
+    const requestInit = {
+      ...init,
+      signal: controller?.signal ?? init.signal,
+    };
+
+    await this.config.onRequest?.(url, requestInit);
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const fetchPromise = this.config.fetchFn(url, requestInit);
+      const response =
+        timeout > 0
+          ? await Promise.race([
+              fetchPromise,
+              new Promise<Response>((_, reject) => {
+                timeoutId = setTimeout(() => {
+                  controller?.abort();
+                  reject(
+                    new VeritixTimeoutError(`Request timed out after ${timeout}ms`, {
+                      timeout,
+                    }),
+                  );
+                }, timeout);
+              }),
+            ])
+          : await fetchPromise;
+
+      await this.config.onResponse?.(url, response);
+      return response;
+    } catch (error) {
+      if (error instanceof VeritixTimeoutError) {
+        throw error;
+      }
+      if (isAbortError(error)) {
+        throw new VeritixTimeoutError(`Request timed out after ${timeout}ms`, { timeout });
+      }
+      throw error;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+
+  private shouldRetry(response: Response, attempt: number): boolean {
+    return attempt < this.config.maxRetries && (response.status === 429 || response.status === 503);
+  }
+
+  private getRetryDelay(response: Response, attempt: number): number {
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter) {
+      const delay = parseRetryAfter(retryAfter);
+      if (delay !== undefined) {
+        return delay;
+      }
+    }
+
+    return this.config.retryDelay * 2 ** attempt;
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async handleErrorResponse(response: Response): Promise<never> {
@@ -221,4 +309,24 @@ export class VeritixClient {
         throw new VeritixError(message, response.status, "API_ERROR", details);
     }
   }
+}
+
+function parseRetryAfter(value: string): number | undefined {
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const date = Date.parse(value);
+  if (!Number.isNaN(date)) {
+    return Math.max(0, date - Date.now());
+  }
+
+  return undefined;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError";
 }

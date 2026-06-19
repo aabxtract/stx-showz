@@ -242,6 +242,35 @@ export interface VeritixConfig {
   headers?: Record<string, string>;
 
   /**
+   * Maximum number of retries for transient HTTP responses (429, 503).
+   * Defaults to 3.
+   */
+  maxRetries?: number;
+
+  /**
+   * Base retry delay in milliseconds. Exponential backoff is applied per retry.
+   * Defaults to 1000.
+   */
+  retryDelay?: number;
+
+  /**
+   * Request timeout in milliseconds.
+   * Defaults to 30000. Set to 0 to disable SDK-managed timeouts.
+   */
+  timeout?: number;
+
+  /**
+   * Optional hook invoked before each request attempt.
+   * Useful for logging, analytics, or mutating request init before fetch.
+   */
+  onRequest?: (url: string, init: RequestInit) => void | Promise<void>;
+
+  /**
+   * Optional hook invoked after each response is received.
+   */
+  onResponse?: (url: string, response: Response) => void | Promise<void>;
+
+  /**
    * Optional custom `fetch` implementation.
    * Useful for testing or environments without a global `fetch`.
    */
