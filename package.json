@@ -14,7 +14,8 @@
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "test": "tsx scripts/unit.ts",
+    "test": "tsx tests/run.ts",
+    "test:legacy": "tsx scripts/unit.ts",
     "test:smoke": "tsx scripts/smoke.ts"
   },
   "prisma": {
