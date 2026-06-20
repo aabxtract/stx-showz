@@ -4,6 +4,15 @@
   "description": "Official TypeScript SDK for the Veritix event ticketing platform on Stacks blockchain",
   "author": "Veritix",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aabxtract/stx-showz.git",
+    "directory": "packages/veritix-sdk"
+  },
+  "homepage": "https://github.com/aabxtract/stx-showz#readme",
+  "bugs": {
+    "url": "https://github.com/aabxtract/stx-showz/issues"
+  },
   "publishConfig": {
     "access": "public"
   },
