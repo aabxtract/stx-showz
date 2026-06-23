@@ -29,7 +29,7 @@ export default function QRCodePlaceholder({ value }: { value: string }) {
           return (
             <div
               key={i}
-              className={`w-4 h-4 rounded-[2px] ${
+              className={`w-3 xs:w-4 h-3 xs:h-4 rounded-[2px] ${
                 filled ? "bg-slate-900" : "bg-transparent"
               }`}
             />
