@@ -7,8 +7,8 @@ export default function EventCard({ event }: { event: AppEvent }) {
   const soldOut = event.ticketsLeft === 0;
 
   return (
-    <div className="card overflow-hidden flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+    <div className="card overflow-hidden flex flex-col transition-shadow duration-200 active:shadow-md sm:hover:-translate-y-0.5 sm:hover:shadow-lg">
+      <div className="relative aspect-[4/3] xs:aspect-[16/10] bg-slate-100 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={event.image}
