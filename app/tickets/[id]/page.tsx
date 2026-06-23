@@ -35,36 +35,36 @@ export default function TicketDetailPage() {
       </Link>
 
       <div className="mt-4 card overflow-hidden">
-        <div className="p-6 sm:p-8 bg-gradient-to-br from-brand-600 to-brand-800 text-white">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-brand-100">
-                Event ticket
+          <div className="p-5 sm:p-8 bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-brand-100">
+                  Event ticket
+                </div>
+                <h1 className="text-xl xs:text-2xl sm:text-3xl font-semibold mt-1 break-words">
+                  {ticket.eventName}
+                </h1>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-semibold mt-1">
-                {ticket.eventName}
-              </h1>
+              <TicketStatusBadge status={ticket.status} />
             </div>
-            <TicketStatusBadge status={ticket.status} />
-          </div>
-          <div className="mt-4 text-sm text-brand-50 space-y-1">
-            <div>
-              📅{" "}
-              {date.toLocaleDateString(undefined, {
-                weekday: "short",
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}{" "}
-              ·{" "}
-              {date.toLocaleTimeString(undefined, {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-brand-50 space-y-1">
+              <div>
+                📅{" "}
+                {date.toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                ·{" "}
+                {date.toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+              <div>📍 {ticket.location}</div>
             </div>
-            <div>📍 {ticket.location}</div>
           </div>
-        </div>
 
         {/* perforation */}
         <div className="relative">
@@ -74,7 +74,7 @@ export default function TicketDetailPage() {
           <div className="h-6" />
         </div>
 
-        <div className="p-6 sm:p-8 grid sm:grid-cols-2 gap-6 items-center">
+          <div className="p-5 sm:p-8 grid sm:grid-cols-2 gap-5 sm:gap-6 items-center">
           <div>
             <div className="space-y-3 text-sm">
               <div>
