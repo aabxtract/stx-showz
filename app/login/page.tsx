@@ -39,12 +39,12 @@ export default function LoginPage() {
         </div>
 
         {isAuthed ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-            <div className="text-xs text-emerald-700 font-medium">Signed in</div>
-            <div className="font-mono text-sm text-emerald-900 mt-1">
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 p-4 text-center">
+            <div className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">Signed in</div>
+            <div className="font-mono text-sm text-emerald-900 dark:text-emerald-100 mt-1">
               {shortAddress(address)}
             </div>
-            <div className="text-xs text-emerald-700 mt-2">Redirecting…</div>
+            <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-2">Redirecting…</div>
           </div>
         ) : isConnected ? (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
@@ -86,7 +86,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="text-brand-700 hover:text-brand-800 font-medium"
+            className="text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 font-medium"
           >
             Sign up
           </Link>
