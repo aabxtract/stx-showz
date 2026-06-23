@@ -29,10 +29,10 @@ export default function LoginPage() {
   }, [isConnected, isAuthed, signing, signInWithServer]);
 
   return (
-    <section className="container-page !py-20">
-      <div className="max-w-md mx-auto card p-8">
+    <section className="container-page !py-12 sm:!py-20">
+      <div className="max-w-md mx-auto card p-6 sm:p-8">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="text-slate-600 text-sm mt-2">
             Sign in to Veritix by connecting your Stacks wallet.
           </p>
@@ -76,7 +76,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={connect}
-            className="btn-primary w-full !py-3"
+            className="btn-primary w-full"
           >
             Connect Wallet to Login
           </button>
