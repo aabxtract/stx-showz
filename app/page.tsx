@@ -33,7 +33,7 @@ export default function HomePage() {
         />
         <div className="container-page pt-16 sm:pt-24 pb-16 sm:pb-24">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs font-medium mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-700 text-brand-700 dark:text-brand-400 text-xs font-medium mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
               Built on Stacks
             </div>
@@ -75,7 +75,7 @@ export default function HomePage() {
           {steps.map((s, i) => (
             <div key={s.title} className="card p-6">
               <div className="text-3xl mb-3">{s.icon}</div>
-              <div className="text-xs font-mono text-brand-600">
+              <div className="text-xs font-mono text-brand-600 dark:text-brand-400">
                 STEP 0{i + 1}
               </div>
               <h3 className="font-semibold text-lg mt-1">{s.title}</h3>
@@ -98,7 +98,7 @@ export default function HomePage() {
           </div>
           <Link
             href="/events"
-            className="hidden sm:inline text-sm font-medium text-brand-700 hover:text-brand-800"
+            className="hidden sm:inline text-sm font-medium text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
           >
             See all events →
           </Link>
@@ -116,7 +116,7 @@ export default function HomePage() {
           <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
-              className="btn bg-white text-brand-700 hover:bg-brand-50"
+              className="btn bg-white dark:bg-brand-700 text-brand-700 dark:text-white hover:bg-brand-50 dark:hover:bg-brand-600"
             >
               Get Started
             </Link>
