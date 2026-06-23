@@ -3,6 +3,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { WalletProvider } from "@/components/WalletProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Veritix — Event ticketing on Stacks",
@@ -46,7 +48,10 @@ export const metadata: Metadata = {
       "Create, sell, and verify event tickets on Stacks. A simple, blockchain-backed event ticketing platform.",
     images: ["/logo.png"],
   },
-  themeColor: "#6d49ff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#6d49ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#151225" },
+  ],
   other: {
     "talentapp:project_verification":
       "be682687148509c05db17a04f16963d2d1465958ede92efc2e57d15d2af7922c4ef6820d0244bae33f977818ea31d93eb0125b5ec98a4aa9c428493e9d2612e7",
@@ -59,13 +64,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem("veritix-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})()`}
+        </Script>
+      </head>
       <body className="min-h-screen flex flex-col">
+        <ThemeProvider>
         <WalletProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
         </WalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

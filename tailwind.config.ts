@@ -1,10 +1,31 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
+    screens: {
+      xs: "400px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       colors: {
+        slate: {
+          50: "var(--slate-50)",
+          100: "var(--slate-100)",
+          200: "var(--slate-200)",
+          300: "var(--slate-300)",
+          400: "var(--slate-400)",
+          500: "var(--slate-500)",
+          600: "var(--slate-600)",
+          700: "var(--slate-700)",
+          800: "var(--slate-800)",
+          900: "var(--slate-900)",
+        },
         brand: {
           50: "#f3f1ff",
           100: "#e9e4ff",

@@ -101,10 +101,10 @@ export default function OrganizerDashboardPage() {
               return (
                 <div key={e.id} className="card p-5">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{e.title}</h3>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold truncate">{e.title}</h3>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                           {e.status}
                         </span>
                       </div>
@@ -130,12 +130,12 @@ export default function OrganizerDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 lg:gap-8">
-                      <div>
+                    <div className="flex items-center justify-between sm:justify-end gap-4 lg:gap-8">
+                      <div className="shrink-0">
                         <div className="text-xs text-slate-500">Revenue</div>
                         <div className="font-semibold">{e.revenue} STX</div>
                       </div>
-                      <Link href={`/organizer/events/${e.id}`} className="btn-secondary">
+                      <Link href={`/organizer/events/${e.id}`} className="btn-secondary shrink-0">
                         Manage Event
                       </Link>
                     </div>

@@ -31,6 +31,7 @@
     "cookie": "^1.1.1",
     "jsonwebtoken": "^9.0.3",
     "next": "14.2.5",
+    "ooja-sdk": "^0.1.0",
     "prisma": "^6.16.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

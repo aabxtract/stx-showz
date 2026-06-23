@@ -21,7 +21,7 @@ export default function ProfilePage() {
     <div className="container-page max-w-4xl">
       <PageHeader title="Profile" subtitle="Your account at a glance." />
 
-      <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+      <div className="card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-800 grid place-items-center text-white text-2xl font-semibold">
           {wallet.slice(2, 3)}
         </div>
@@ -29,7 +29,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             <div className="text-xs text-slate-500">Wallet address</div>
             {isConnected ? (
-              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                 {network}
               </span>
             ) : (
@@ -43,7 +43,7 @@ export default function ProfilePage() {
             <span className="text-slate-400">({shortAddress(wallet)})</span>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-700 border border-brand-100">
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border border-brand-100 dark:border-brand-700">
               {currentUser.role}
             </span>
             {!isConnected && <ConnectWalletButton className="btn-secondary !py-1.5 !px-3 text-xs" />}

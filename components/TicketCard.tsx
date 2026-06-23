@@ -6,9 +6,9 @@ export default function TicketCard({ ticket }: { ticket: Ticket }) {
   const date = new Date(ticket.eventDate);
 
   return (
-    <div className="card overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="card overflow-hidden active:shadow-md sm:hover:shadow-lg transition-shadow">
       <div className="flex">
-        <div className="hidden sm:flex w-2 bg-gradient-to-b from-brand-500 to-brand-700" />
+        <div className="hidden sm:flex w-2 shrink-0 bg-gradient-to-b from-brand-500 to-brand-700" />
         <div className="flex-1 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
