@@ -78,7 +78,7 @@ export default function ManageEventPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">{event.title}</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               {event.status ?? "Active"}
             </span>
           </div>
@@ -156,7 +156,7 @@ export default function ManageEventPage() {
                         <span
                           className={`inline-block px-2 py-0.5 rounded-full text-xs ${
                             a.checkedIn
-                              ? "bg-emerald-50 text-emerald-700"
+                              ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
                               : "bg-slate-100 text-slate-600"
                           }`}
                         >
