@@ -5,6 +5,39 @@
 :root {
   --background: #fafaff;
   --foreground: #0f0a1f;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+}
+
+.dark {
+  --background: #0c0a1a;
+  --foreground: #e8e4f0;
+  --card-bg: #151225;
+  --card-border: #2d2840;
+  --input-bg: #1a172e;
+  --input-border: #3d3750;
+  --slate-50: #1a172e;
+  --slate-100: #221f35;
+  --slate-200: #2d2840;
+  --slate-300: #3d3750;
+  --slate-400: #6b6380;
+  --slate-500: #8f86a0;
+  --slate-600: #a99fc0;
+  --slate-700: #c8bfd8;
+  --slate-800: #e0d8ec;
+  --slate-900: #f0ecf5;
 }
 
 html {
@@ -19,6 +52,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   overscroll-behavior: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @layer components {
@@ -29,22 +63,46 @@ body {
     @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-soft;
   }
   .btn-secondary {
-    @apply btn bg-white text-brand-700 border border-brand-200 hover:bg-brand-50;
+    @apply btn text-brand-700 border border-brand-200;
+    background-color: var(--card-bg);
+  }
+  .btn-secondary:hover {
+    background-color: var(--slate-100);
   }
   .btn-ghost {
-    @apply btn text-slate-700 hover:bg-slate-100;
+    @apply btn;
+    color: var(--slate-700);
+  }
+  .btn-ghost:hover {
+    background-color: var(--slate-100);
   }
   .btn-danger {
     @apply btn bg-rose-600 text-white hover:bg-rose-700;
   }
   .card {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-soft;
+    border-radius: 1rem;
+    border: 1px solid var(--card-border);
+    background-color: var(--card-bg);
+    box-shadow: 0 6px 24px -6px rgba(40, 20, 80, 0.12);
+  }
+  .dark .card {
+    box-shadow: 0 6px 24px -6px rgba(0, 0, 0, 0.4);
   }
   .input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 sm:py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent;
+    @apply w-full rounded-xl px-4 py-3 sm:py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--foreground);
+  }
+  .input::placeholder {
+    color: var(--slate-400);
   }
   .label {
-    @apply block text-sm font-medium text-slate-700 mb-1.5;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.375rem;
+    color: var(--slate-700);
   }
   .container-page {
     @apply max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12;
