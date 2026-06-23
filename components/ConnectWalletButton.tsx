@@ -36,7 +36,7 @@ export default function ConnectWalletButton({
         onClick={() => setOpen((v) => !v)}
         className="btn-secondary !py-2 !px-3 gap-2"
       >
-        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+        <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
         <span className="font-mono text-xs">{shortAddress(address)}</span>
         <svg
           width="14"
@@ -57,9 +57,9 @@ export default function ConnectWalletButton({
 
       {open && (
         <div className="absolute right-0 mt-2 w-64 sm:w-72 card p-2 z-50">
-          <div className="px-3 py-2">
+            <div className="px-3 py-2">
             <div className="text-xs text-slate-500">Connected wallet</div>
-            <div className="font-mono text-xs break-all text-slate-800 mt-0.5">
+            <div className="font-mono text-xs break-all text-slate-800 dark:text-slate-200 mt-0.5">
               {address}
             </div>
           </div>
@@ -72,8 +72,8 @@ export default function ConnectWalletButton({
                   onClick={() => setNetwork(n)}
                   className={`flex-1 px-2 py-1.5 rounded-lg text-xs capitalize border ${
                     network === n
-                      ? "bg-brand-50 border-brand-200 text-brand-700"
-                      : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      ? "bg-brand-50 dark:bg-brand-900/30 border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-400"
+                      : "bg-white dark:bg-[var(--card-bg)] border-slate-200 text-slate-600 hover:border-slate-300"
                   }`}
                 >
                   {n}
@@ -86,7 +86,7 @@ export default function ConnectWalletButton({
               disconnect();
               setOpen(false);
             }}
-            className="w-full text-left px-3 py-2 mt-1 rounded-lg text-sm text-rose-600 hover:bg-rose-50 border-t border-slate-100"
+            className="w-full text-left px-3 py-2 mt-1 rounded-lg text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950 border-t border-slate-100"
           >
             Disconnect
           </button>
