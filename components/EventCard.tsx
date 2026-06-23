@@ -15,7 +15,7 @@ export default function EventCard({ event }: { event: AppEvent }) {
           alt={event.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium text-slate-700">
+        <div className="absolute top-3 left-3 bg-white/90 dark:bg-[#151225]/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium text-slate-700">
           {event.category}
         </div>
         {soldOut && (
@@ -69,7 +69,7 @@ export default function EventCard({ event }: { event: AppEvent }) {
           </div>
           <Link
             href={`/events/${event.id}`}
-            className="text-sm font-medium text-brand-700 hover:text-brand-800"
+            className="text-sm font-medium text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300"
           >
             View Event →
           </Link>
