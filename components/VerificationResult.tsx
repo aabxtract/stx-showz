@@ -8,23 +8,23 @@ const config: Record<
     title: "Valid ticket",
     description: "This ticket is valid for entry. Allow the attendee in.",
     icon: "✓",
-    bg: "bg-emerald-50",
-    ring: "ring-emerald-200 text-emerald-700",
+    bg: "bg-emerald-50 dark:bg-emerald-950",
+    ring: "ring-emerald-200 dark:ring-emerald-800 text-emerald-700 dark:text-emerald-300",
   },
   used: {
     title: "Already used",
     description:
       "This ticket has already been checked in. Do not allow re-entry.",
     icon: "↻",
-    bg: "bg-amber-50",
-    ring: "ring-amber-200 text-amber-700",
+    bg: "bg-amber-50 dark:bg-amber-950",
+    ring: "ring-amber-200 dark:ring-amber-800 text-amber-700 dark:text-amber-300",
   },
   invalid: {
     title: "Invalid ticket",
     description: "This ticket ID was not found for this event.",
     icon: "✕",
-    bg: "bg-rose-50",
-    ring: "ring-rose-200 text-rose-700",
+    bg: "bg-rose-50 dark:bg-rose-950",
+    ring: "ring-rose-200 dark:ring-rose-800 text-rose-700 dark:text-rose-300",
   },
 };
 
