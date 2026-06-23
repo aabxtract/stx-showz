@@ -92,11 +92,11 @@ export default function ManageEventPage() {
             · 📍 {event.location}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/organizer/verify" className="btn-secondary">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Link href="/organizer/verify" className="btn-secondary flex-1 sm:flex-initial">
             Verify Tickets
           </Link>
-          <button onClick={cancel} className="btn-danger">
+          <button onClick={cancel} className="btn-danger flex-1 sm:flex-initial">
             Cancel Event
           </button>
         </div>
@@ -119,41 +119,56 @@ export default function ManageEventPage() {
       <div className="mt-10">
         <h2 className="font-semibold text-lg mb-4">Attendees</h2>
         <div className="card overflow-hidden">
-          <div className="grid grid-cols-12 px-5 py-3 text-xs uppercase tracking-wide text-slate-500 bg-slate-50 border-b border-slate-200">
-            <div className="col-span-5">Wallet</div>
-            <div className="col-span-3">Ticket ID</div>
-            <div className="col-span-3">Purchased</div>
-            <div className="col-span-1 text-right">Status</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-slate-500 bg-slate-50 border-b border-slate-200">
+                  <th className="px-4 py-3 text-left font-medium min-w-[140px]">Wallet</th>
+                  <th className="px-4 py-3 text-left font-medium min-w-[160px]">Ticket ID</th>
+                  <th className="px-4 py-3 text-left font-medium min-w-[110px]">Purchased</th>
+                  <th className="px-4 py-3 text-right font-medium min-w-[70px]">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendees.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500">
+                      No attendees yet
+                    </td>
+                  </tr>
+                ) : (
+                  attendees.map((a) => (
+                    <tr
+                      key={a.ticketId}
+                      className="border-b border-slate-100 last:border-0"
+                    >
+                      <td className="px-4 py-3 font-mono text-slate-800">
+                        <span className="sm:hidden">{shortAddress(a.wallet)}</span>
+                        <span className="hidden sm:inline">{a.wallet}</span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-slate-700 max-w-[120px] sm:max-w-none truncate">
+                        {a.ticketId}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                        {new Date(a.purchasedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                            a.checkedIn
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {a.checkedIn ? "In" : "—"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-          {attendees.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-slate-500">No attendees yet</div>
-          ) : (
-            attendees.map((a) => (
-              <div
-                key={a.ticketId}
-                className="grid grid-cols-12 px-5 py-3 text-sm border-b border-slate-100 last:border-0 items-center"
-              >
-                <div className="col-span-5 font-mono text-slate-800 truncate">
-                  {shortAddress(a.wallet)}
-                </div>
-                <div className="col-span-3 font-mono text-slate-700 truncate">{a.ticketId}</div>
-                <div className="col-span-3 text-slate-600">
-                  {new Date(a.purchasedAt).toLocaleDateString()}
-                </div>
-                <div className="col-span-1 text-right">
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                      a.checkedIn
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {a.checkedIn ? "In" : "—"}
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
         </div>
       </div>
     </div>
