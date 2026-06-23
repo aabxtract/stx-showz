@@ -99,7 +99,7 @@ export default function EventForm() {
             placeholder="What's this event about?"
           />
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label className="label">Category</label>
             <select
