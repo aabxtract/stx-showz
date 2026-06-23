@@ -30,10 +30,10 @@ export default function SignupPage() {
   }, [isConnected, agreed, isAuthed, signing, signInWithServer]);
 
   return (
-    <section className="container-page !py-20">
-      <div className="max-w-md mx-auto card p-8">
+    <section className="container-page !py-12 sm:!py-20">
+      <div className="max-w-md mx-auto card p-6 sm:p-8">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
             Create your account
           </h1>
           <p className="text-slate-600 text-sm mt-2">
