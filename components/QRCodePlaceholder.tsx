@@ -12,7 +12,7 @@ export default function QRCodePlaceholder({ value }: { value: string }) {
   }
 
   return (
-    <div className="inline-block bg-white p-4 rounded-2xl border border-slate-200 shadow-soft">
+    <div className="inline-block bg-white dark:bg-[var(--card-bg)] p-4 rounded-2xl border border-slate-200 shadow-soft">
       <div
         className="grid gap-[2px]"
         style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}
