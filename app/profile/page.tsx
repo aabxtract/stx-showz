@@ -21,7 +21,7 @@ export default function ProfilePage() {
     <div className="container-page max-w-4xl">
       <PageHeader title="Profile" subtitle="Your account at a glance." />
 
-      <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+      <div className="card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-800 grid place-items-center text-white text-2xl font-semibold">
           {wallet.slice(2, 3)}
         </div>
