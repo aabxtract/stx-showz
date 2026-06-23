@@ -15,14 +15,14 @@ export default function Footer() {
           />
           <span>Veritix · Blockchain-backed event ticketing</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/events" className="hover:text-slate-900">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Link href="/events" className="hover:text-slate-900 py-1">
             Events
           </Link>
-          <Link href="/create-event" className="hover:text-slate-900">
+          <Link href="/create-event" className="hover:text-slate-900 py-1">
             Create
           </Link>
-          <Link href="/organizer/dashboard" className="hover:text-slate-900">
+          <Link href="/organizer/dashboard" className="hover:text-slate-900 py-1">
             Organizer
           </Link>
         </div>
