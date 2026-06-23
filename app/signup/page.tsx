@@ -55,14 +55,14 @@ export default function SignupPage() {
         </label>
 
         {isAuthed ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-            <div className="text-xs text-emerald-700 font-medium">
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 p-4 text-center">
+            <div className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
               Account ready
             </div>
-            <div className="font-mono text-sm text-emerald-900 mt-1">
+            <div className="font-mono text-sm text-emerald-900 dark:text-emerald-100 mt-1">
               {shortAddress(address)}
             </div>
-            <div className="text-xs text-emerald-700 mt-2">Redirecting…</div>
+            <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-2">Redirecting…</div>
           </div>
         ) : isConnected ? (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
@@ -89,7 +89,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-brand-700 hover:text-brand-800 font-medium"
+            className="text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 font-medium"
           >
             Log in
           </Link>
