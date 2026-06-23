@@ -145,7 +145,7 @@ export default function EventDetailPage() {
       <div className="mt-6 sm:mt-8 grid lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div>
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-700 border border-brand-100">
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border border-brand-100 dark:border-brand-700">
               {event.category}
             </span>
             <h1 className="text-2xl xs:text-3xl sm:text-4xl font-semibold tracking-tight mt-3">
@@ -239,7 +239,7 @@ export default function EventDetailPage() {
             {purchaseState.stage === "success" && (
               <Link
                 href="/my-tickets"
-                className="mt-3 block text-center text-sm text-brand-700 hover:underline"
+                className="mt-3 block text-center text-sm text-brand-700 dark:text-brand-400 hover:underline"
               >
                 View your ticket →
               </Link>
