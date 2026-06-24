@@ -21,6 +21,8 @@ export const mockEvents: AppEvent[] = [
     image:
       "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80",
     price: 25,
+    network: "stacks",
+    currency: "STX",
     ticketsTotal: 500,
     ticketsLeft: 142,
     organizer: "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKQ9H6DPR",
@@ -37,6 +39,8 @@ export const mockEvents: AppEvent[] = [
     image:
       "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80",
     price: 15,
+    network: "stacks",
+    currency: "STX",
     ticketsTotal: 1000,
     ticketsLeft: 612,
     organizer: "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE",
@@ -53,6 +57,8 @@ export const mockEvents: AppEvent[] = [
     image:
       "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&q=80",
     price: 5,
+    network: "stacks",
+    currency: "STX",
     ticketsTotal: 200,
     ticketsLeft: 88,
     organizer: "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKQ9H6DPR",
@@ -69,6 +75,8 @@ export const mockEvents: AppEvent[] = [
     image:
       "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1200&q=80",
     price: 10,
+    network: "stacks",
+    currency: "STX",
     ticketsTotal: 5000,
     ticketsLeft: 2330,
     organizer: "SPMR2N4XJ8GMTPK9FZSDC8K9YQ6TG7H3M2VJW9XA",
@@ -85,10 +93,48 @@ export const mockEvents: AppEvent[] = [
     image:
       "https://images.unsplash.com/photo-1531058020387-3be344556be6?w=1200&q=80",
     price: 12,
+    network: "stacks",
+    currency: "STX",
     ticketsTotal: 150,
     ticketsLeft: 0,
     organizer: "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE",
     status: "Sold Out",
+  },
+  {
+    id: "evt-006",
+    title: "Bitcoin Pizza Day Celebration",
+    description:
+      "Celebrate 16 years of Bitcoin pizza with food, music, and talks on the future of peer-to-peer electronic cash. BTC payments accepted at the bar.",
+    category: "Tech",
+    date: "2026-05-22T17:00:00Z",
+    location: "Nairobi, Kenya",
+    image:
+      "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=1200&q=80",
+    price: 0.0005,
+    network: "bitcoin",
+    currency: "BTC",
+    ticketsTotal: 300,
+    ticketsLeft: 189,
+    organizer: "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKQ9H6DPR",
+    status: "Active",
+  },
+  {
+    id: "evt-007",
+    title: "Lightning Network Hackathon",
+    description:
+      "A weekend hackathon building on Bitcoin's Lightning Network. Prizes in BTC for the top 3 teams. Food, drinks, and sats for all participants.",
+    category: "Workshop",
+    date: "2026-11-08T09:00:00Z",
+    location: "Cape Town, South Africa",
+    image:
+      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80",
+    price: 0.001,
+    network: "bitcoin",
+    currency: "BTC",
+    ticketsTotal: 100,
+    ticketsLeft: 72,
+    organizer: "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE",
+    status: "Active",
   },
 ];
 

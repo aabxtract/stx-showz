@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { WalletProvider } from "@/components/WalletProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { NotificationProvider } from "@/components/NotificationProvider";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
     "Web3 events",
   ],
   authors: [{ name: "Veritix" }],
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
@@ -71,11 +73,16 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="min-h-screen flex flex-col">
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); }); }`}
+        </Script>
         <ThemeProvider>
         <WalletProvider>
+        <NotificationProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+        </NotificationProvider>
         </WalletProvider>
         </ThemeProvider>
       </body>

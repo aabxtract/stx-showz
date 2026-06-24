@@ -55,6 +55,7 @@ model Event {
   location      String
   image         String
   price         Decimal       @db.Decimal(20, 6)
+  network       String        @default("stacks") // stacks | bitcoin
   ticketsTotal  Int
   ticketsSold   Int           @default(0)
   status        EventStatus   @default(Active)

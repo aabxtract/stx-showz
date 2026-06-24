@@ -5,6 +5,7 @@ import { shortAddr } from "@/lib/mockData";
 export default function EventCard({ event }: { event: AppEvent }) {
   const date = new Date(event.date);
   const soldOut = event.ticketsLeft === 0;
+  const isBitcoin = event.network === "bitcoin";
 
   return (
     <div className="card overflow-hidden flex flex-col transition-shadow duration-200 active:shadow-md sm:hover:-translate-y-0.5 sm:hover:shadow-lg">
@@ -15,8 +16,15 @@ export default function EventCard({ event }: { event: AppEvent }) {
           alt={event.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute top-3 left-3 bg-white/90 dark:bg-[#151225]/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium text-slate-700">
-          {event.category}
+        <div className="absolute top-3 left-3 flex gap-1.5">
+          <span className="bg-white/90 dark:bg-[#151225]/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium text-slate-700">
+            {event.category}
+          </span>
+          {isBitcoin && (
+            <span className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 backdrop-blur px-2.5 py-1 rounded-full text-xs font-medium">
+              BTC
+            </span>
+          )}
         </div>
         {soldOut && (
           <div className="absolute top-3 right-3 bg-rose-600 text-white px-2.5 py-1 rounded-full text-xs font-medium">
@@ -49,7 +57,7 @@ export default function EventCard({ event }: { event: AppEvent }) {
           <div>
             <div className="text-xs text-slate-500">Price</div>
             <div className="font-semibold text-slate-900">
-              {event.price} STX
+              {event.price} {event.currency}
             </div>
           </div>
           <div className="text-right">
