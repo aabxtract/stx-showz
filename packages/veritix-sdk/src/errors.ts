@@ -25,7 +25,12 @@ export class VeritixError extends Error {
 /**
  * Thrown when the request is not authenticated (HTTP 401).
  */
-
+export class VeritixAuthError extends VeritixError {
+  constructor(message = "Unauthorized", details?: unknown) {
+    super(message, 401, "UNAUTHORIZED", details);
+    this.name = "VeritixAuthError";
+  }
+}
 
 /**
  * Thrown when the user lacks permission for the action (HTTP 403).
