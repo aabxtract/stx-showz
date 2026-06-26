@@ -32,7 +32,7 @@ const CURRENCY_LABELS: Record<string, string> = {
 };
 
 export function toAppEvent(e: VeritixEvent): AppEvent {
-  const network = (e as any).network === "bitcoin" ? "bitcoin" : "stacks";
+  const network = e.network === "bitcoin" ? "bitcoin" : "stacks";
   return {
     id: e.id,
     title: e.title,
