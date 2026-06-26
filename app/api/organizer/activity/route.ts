@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { shortAddr } from "@/lib/utils";
 
 export async function GET() {
   const session = getSession();
