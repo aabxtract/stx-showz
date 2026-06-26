@@ -228,18 +228,18 @@ export class VeritixClient {
       const response =
         timeout > 0
           ? await Promise.race([
-              fetchPromise,
-              new Promise<Response>((_, reject) => {
-                timeoutId = setTimeout(() => {
-                  controller?.abort();
-                  reject(
-                    new VeritixTimeoutError(`Request timed out after ${timeout}ms`, {
-                      timeout,
-                    }),
-                  );
-                }, timeout);
-              }),
-            ])
+            fetchPromise,
+            new Promise<Response>((_, reject) => {
+              timeoutId = setTimeout(() => {
+                controller?.abort();
+                reject(
+                  new VeritixTimeoutError(`Request timed out after ${timeout}ms`, {
+                    timeout,
+                  }),
+                );
+              }, timeout);
+            }),
+          ])
           : await fetchPromise;
 
       await this.config.onResponse?.(url, response);

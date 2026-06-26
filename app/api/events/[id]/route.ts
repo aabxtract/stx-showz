@@ -16,6 +16,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 const CATEGORIES = ["Music", "Tech", "Sports", "Art", "Conference", "Workshop"] as const;
+const NETWORKS = ["stacks", "bitcoin"] as const;
 
 const UpdateBody = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -24,6 +25,7 @@ const UpdateBody = z.object({
   date: z.string().datetime().optional(),
   location: z.string().min(1).max(300).optional(),
   image: z.string().url().optional(),
+  network: z.enum(NETWORKS).optional(),
   ticketsTotal: z.number().int().positive().max(1_000_000).optional(),
 });
 

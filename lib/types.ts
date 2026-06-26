@@ -6,6 +6,8 @@ export type EventCategory =
   | "Conference"
   | "Workshop";
 
+export type Network = "stacks" | "bitcoin";
+
 export interface AppEvent {
   id: string;
   title: string;
@@ -14,7 +16,9 @@ export interface AppEvent {
   date: string; // ISO
   location: string;
   image: string;
-  price: number; // in STX
+  price: number;
+  network: Network;
+  currency: string;
   ticketsTotal: number;
   ticketsLeft: number;
   organizer: string; // wallet address

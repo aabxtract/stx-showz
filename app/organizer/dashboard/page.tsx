@@ -13,6 +13,7 @@ interface OrganizerEventRow {
   date: string;
   location: string;
   status: string;
+  network: string;
   ticketsTotal: number;
   ticketsSold: number;
   price: string;
@@ -104,6 +105,11 @@ export default function OrganizerDashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold truncate">{e.title}</h3>
+                        {e.network === "bitcoin" && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                            BTC
+                          </span>
+                        )}
                         <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                           {e.status}
                         </span>

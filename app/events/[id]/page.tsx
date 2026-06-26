@@ -128,6 +128,7 @@ export default function EventDetailPage() {
 
   const date = new Date(event.date);
   const soldOut = event.ticketsLeft === 0;
+  const isBitcoin = event.network === "bitcoin";
 
   return (
     <div className="container-page">
@@ -145,9 +146,16 @@ export default function EventDetailPage() {
       <div className="mt-6 sm:mt-8 grid lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div>
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border border-brand-100 dark:border-brand-700">
-              {event.category}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border border-brand-100 dark:border-brand-700">
+                {event.category}
+              </span>
+              {isBitcoin && (
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  Bitcoin
+                </span>
+              )}
+            </div>
             <h1 className="text-2xl xs:text-3xl sm:text-4xl font-semibold tracking-tight mt-3">
               {event.title}
             </h1>
@@ -182,7 +190,7 @@ export default function EventDetailPage() {
               <div>
                 <div className="text-xs text-slate-500">Ticket price</div>
                 <div className="text-3xl font-semibold mt-0.5">
-                  {event.price} <span className="text-base">STX</span>
+                  {event.price} <span className="text-base">{event.currency}</span>
                 </div>
               </div>
               <div className="text-right">
@@ -221,6 +229,8 @@ export default function EventDetailPage() {
                 ? "Confirming on chain…"
                 : purchaseState.stage === "success"
                 ? "Ticket purchased ✓"
+                : isBitcoin
+                ? "Buy with BTC"
                 : isAuthed
                 ? "Buy Ticket"
                 : isConnected

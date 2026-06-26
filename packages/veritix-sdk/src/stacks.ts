@@ -74,7 +74,7 @@ export function getEscrowAddress(network: StacksNetworkName = "testnet"): string
   if (!address) {
     throw new Error(
       `No escrow address configured for ${network}. ` +
-        `Call setEscrowAddresses() first or pass recipientAddress directly.`,
+      `Call setEscrowAddresses() first or pass recipientAddress directly.`,
     );
   }
   return address;

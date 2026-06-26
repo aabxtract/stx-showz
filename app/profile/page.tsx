@@ -1,10 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import OrganizerStats from "@/components/OrganizerStats";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
+import EmptyState from "@/components/EmptyState";
 import { useWallet, shortAddress } from "@/components/WalletProvider";
-import { currentUser, mockActivity } from "@/lib/mockData";
+
+interface ActivityItem {
+  id: string;
+  type: "purchase" | "create" | "verify" | "withdraw";
+  label: string;
+  timestamp: string;
+}
+
+interface UserProfile {
+  id: string;
+  address: string;
+  name: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+}
 
 const typeIcon: Record<string, string> = {
   purchase: "🎟️",
@@ -14,8 +31,35 @@ const typeIcon: Record<string, string> = {
 };
 
 export default function ProfilePage() {
-  const { isConnected, address, network } = useWallet();
-  const wallet = address ?? currentUser.wallet;
+  const { isConnected, address, network, isAuthed, authLoading, user } = useWallet();
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [ticketsCount, setTicketsCount] = useState(0);
+  const [eventsCount, setEventsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthed) {
+      setLoading(false);
+      return;
+    }
+
+    Promise.all([
+      fetch("/api/organizer/activity").then((r) => (r.ok ? r.json() : { activity: [] })),
+      fetch("/api/organizer/events").then((r) => (r.ok ? r.json() : { events: [] })),
+      fetch("/api/tickets/me").then((r) => (r.ok ? r.json() : { tickets: [] })),
+    ])
+      .then(([activityData, eventsData, ticketsData]) => {
+        setActivity(activityData.activity ?? []);
+        setEventsCount(eventsData.events?.length ?? 0);
+        setTicketsCount(ticketsData.tickets?.length ?? 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [isAuthed]);
+
+  const wallet = address ?? user?.address ?? "";
+  const displayName = user?.name ?? shortAddress(wallet);
+  const role = eventsCount > 0 ? "Organizer" : "Attendee";
 
   return (
     <div className="container-page max-w-4xl">
@@ -23,7 +67,7 @@ export default function ProfilePage() {
 
       <div className="card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-800 grid place-items-center text-white text-2xl font-semibold">
-          {wallet.slice(2, 3)}
+          {wallet ? wallet.slice(2, 3) : "?"}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
@@ -34,17 +78,23 @@ export default function ProfilePage() {
               </span>
             ) : (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
-                mock
+                disconnected
               </span>
             )}
           </div>
           <div className="font-mono text-slate-900 break-all">
-            {wallet}{" "}
-            <span className="text-slate-400">({shortAddress(wallet)})</span>
+            {wallet ? (
+              <>
+                {wallet}{" "}
+                <span className="text-slate-400">({shortAddress(wallet)})</span>
+              </>
+            ) : (
+              <span className="text-slate-400">No wallet connected</span>
+            )}
           </div>
           <div className="mt-2 flex items-center gap-2">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border border-brand-100 dark:border-brand-700">
-              {currentUser.role}
+              {role}
             </span>
             {!isConnected && <ConnectWalletButton className="btn-secondary !py-1.5 !px-3 text-xs" />}
           </div>
@@ -52,32 +102,55 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-6">
-        <OrganizerStats
-          stats={[
-            { label: "Tickets owned", value: currentUser.totalTicketsOwned },
-            { label: "Events created", value: currentUser.totalEventsCreated },
-            { label: "Role", value: currentUser.role },
-          ]}
-        />
+        {loading ? (
+          <div className="text-slate-500 text-sm">Loading stats…</div>
+        ) : (
+          <OrganizerStats
+            stats={[
+              { label: "Tickets owned", value: ticketsCount },
+              { label: "Events created", value: eventsCount },
+              { label: "Role", value: role },
+            ]}
+          />
+        )}
       </div>
 
       <div className="mt-10">
         <h2 className="font-semibold text-lg mb-4">Recent activity</h2>
-        <div className="card divide-y divide-slate-100">
-          {mockActivity.map((a) => (
-            <div key={a.id} className="px-5 py-4 flex items-start gap-4">
-              <div className="w-9 h-9 rounded-full bg-slate-100 grid place-items-center text-base shrink-0">
-                {typeIcon[a.type] ?? "•"}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm text-slate-800">{a.label}</div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  {new Date(a.timestamp).toLocaleString()}
+        {!isAuthed ? (
+          <EmptyState
+            icon="🔐"
+            title="Not signed in"
+            description="Connect your wallet and sign in to see your activity."
+            action={
+              <Link href="/login" className="btn-primary">
+                Sign in
+              </Link>
+            }
+          />
+        ) : loading ? (
+          <div className="card p-6 text-slate-500 text-sm">Loading activity…</div>
+        ) : activity.length === 0 ? (
+          <div className="card p-6 text-center text-slate-500 text-sm">
+            No activity yet. Create an event or buy a ticket to get started.
+          </div>
+        ) : (
+          <div className="card divide-y divide-slate-100">
+            {activity.map((a) => (
+              <div key={a.id} className="px-5 py-4 flex items-start gap-4">
+                <div className="w-9 h-9 rounded-full bg-slate-100 grid place-items-center text-base shrink-0">
+                  {typeIcon[a.type] ?? "•"}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-slate-800">{a.label}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {new Date(a.timestamp).toLocaleString()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

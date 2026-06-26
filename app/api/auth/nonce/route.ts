@@ -54,7 +54,7 @@ async function cleanupExpired() {
   await Promise.all([
     prisma.nonce.deleteMany({ where: { expiresAt: { lt: now } } }),
     prisma.rateLimit.deleteMany({ where: { windowStart: { lt: rateCutoff } } }),
-  ]).catch(() => {});
+  ]).catch(() => { });
 }
 
 export async function POST(req: Request) {

@@ -26,7 +26,13 @@ const statusFromApi: Record<string, AppEvent["status"]> = {
   Ended: "Ended",
 };
 
+const CURRENCY_LABELS: Record<string, string> = {
+  stacks: "STX",
+  bitcoin: "BTC",
+};
+
 export function toAppEvent(e: VeritixEvent): AppEvent {
+  const network = e.network === "bitcoin" ? "bitcoin" : "stacks";
   return {
     id: e.id,
     title: e.title,
@@ -36,6 +42,8 @@ export function toAppEvent(e: VeritixEvent): AppEvent {
     location: e.location,
     image: e.image,
     price: Number(e.price),
+    network,
+    currency: CURRENCY_LABELS[network],
     ticketsTotal: e.ticketsTotal,
     ticketsLeft: e.ticketsLeft,
     organizer: e.organizer?.address ?? e.organizerId,
@@ -77,17 +85,15 @@ export async function purchaseTicket(input: {
 export async function createEvent(input: {
   title: string;
   description: string;
-  category: string;
+  category: EventCategory;
   date: string;
   location: string;
   image: string;
   price: string;
+  network: "stacks" | "bitcoin";
   ticketsTotal: number;
 }): Promise<AppEvent> {
-  const event = await veritix.events.create({
-    ...input,
-    category: input.category as EventCategory,
-  });
+  const event = await veritix.events.create(input);
   return toAppEvent(event);
 }
 

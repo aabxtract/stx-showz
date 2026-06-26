@@ -79,10 +79,10 @@ export async function POST(req: Request) {
       : process.env.ESCROW_ADDRESS_TESTNET
   )?.trim();
 
-  if (!escrow) {
+  if (!escrow && !devBypass) {
     console.error(
       `[tickets] Missing escrow address for network=${network}. ` +
-        `Set ESCROW_ADDRESS_${network.toUpperCase()} before accepting purchases.`,
+      `Set ESCROW_ADDRESS_${network.toUpperCase()} before accepting purchases.`,
     );
     return NextResponse.json(
       { error: "Escrow wallet is not configured. Please contact support." },
@@ -93,11 +93,11 @@ export async function POST(req: Request) {
   const check = devBypass
     ? ({ ok: true, status: "confirmed", sender: session.address } as const)
     : await verifyTicketPayment({
-        network,
-        txId,
-        expectedPriceStx: event.price,
-        buyerAddress: session.address,
-      });
+      network,
+      txId,
+      expectedPriceStx: event.price,
+      buyerAddress: session.address,
+    });
 
   if (!check.ok && check.status === "failed") {
     return NextResponse.json({ error: check.reason }, { status: 400 });

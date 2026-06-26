@@ -50,7 +50,7 @@ export default function EventsPage() {
     <div className="container-page">
       <PageHeader
         title="Browse events"
-        subtitle="Find events to attend. Buy tickets directly from organizers, settled on Stacks."
+        subtitle="Find events to attend. Buy tickets directly from organizers, settled on Stacks or Bitcoin."
       />
 
       <div className="flex flex-col lg:flex-row gap-3 mb-6">
@@ -70,10 +70,10 @@ export default function EventsPage() {
             <button
               key={c}
               onClick={() => setCat(c)}
-              className={`px-3 py-2 rounded-xl text-sm whitespace-nowrap border transition-colors ${
+                className={`px-3 py-2 rounded-xl text-sm whitespace-nowrap border transition-colors ${
                 cat === c
                   ? "bg-brand-600 border-brand-600 text-white"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                  : "bg-white dark:bg-[var(--card-bg)] border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500"
               }`}
             >
               {c}

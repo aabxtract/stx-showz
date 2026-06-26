@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nonce not found" }, { status: 400 });
   }
   if (record.expiresAt < new Date()) {
-    await prisma.nonce.delete({ where: { address } }).catch(() => {});
+    await prisma.nonce.delete({ where: { address } }).catch(() => { });
     return NextResponse.json({ error: "Nonce expired" }, { status: 400 });
   }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   if (devBypass) {
     console.warn(
       `[auth/verify] DEV_AUTH_BYPASS active — skipping signature check for ${address}. ` +
-        `This is only allowed outside production.`,
+      `This is only allowed outside production.`,
     );
   } else {
     const network = process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet";
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     }
   }
 
-  await prisma.nonce.delete({ where: { address } }).catch(() => {});
+  await prisma.nonce.delete({ where: { address } }).catch(() => { });
 
   const user = await prisma.user.upsert({
     where: { address },

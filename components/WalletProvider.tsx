@@ -122,7 +122,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         redirectTo: "/",
         userSession: session,
         onFinish: () => refreshFromSession(),
-        onCancel: () => {},
+        onCancel: () => { },
       });
     } catch (err) {
       console.error("showConnect failed:", err);
@@ -191,7 +191,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setAddress(null);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-    } catch {}
+    } catch { }
     setUser(null);
   }, []);
 

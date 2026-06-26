@@ -76,11 +76,16 @@ export default function ManageEventPage() {
 
       <div className="mt-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">{event.title}</h1>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               {event.status ?? "Active"}
             </span>
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
+            <span>{event.network === "bitcoin" ? "₿ Bitcoin" : "⚡ Stacks"}</span>
+            <span>·</span>
+            <span>{event.price} {event.currency}</span>
           </div>
           <div className="text-sm text-slate-600 mt-1">
             📅{" "}
@@ -111,7 +116,7 @@ export default function ManageEventPage() {
               value: event.ticketsLeft,
               hint: `of ${event.ticketsTotal} total`,
             },
-            { label: "Revenue", value: `${revenue} STX` },
+            { label: "Revenue", value: `${revenue} ${event.currency}` },
           ]}
         />
       </div>

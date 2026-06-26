@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { shortAddr } from "@/lib/utils";
 
 export async function GET() {
   const session = getSession();
@@ -62,8 +63,4 @@ export async function GET() {
     .slice(0, 30);
 
   return NextResponse.json({ activity: items });
-}
-
-function shortAddr(addr: string) {
-  return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
 }

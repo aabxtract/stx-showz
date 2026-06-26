@@ -23,6 +23,8 @@ export interface VeritixEvent {
   image: string;
   /** Price as a decimal string in STX (e.g. "5.5"). */
   price: string;
+  /** Blockchain network: "stacks" or "bitcoin". */
+  network: "stacks" | "bitcoin";
   ticketsTotal: number;
   ticketsSold: number;
   ticketsLeft: number;
@@ -45,6 +47,8 @@ export interface CreateEventInput {
   image: string;
   /** Ticket price in STX (as string or number). */
   price: string | number;
+  /** Blockchain network: "stacks" or "bitcoin". */
+  network: "stacks" | "bitcoin";
   /** Total number of tickets available. */
   ticketsTotal: number;
 }
@@ -57,6 +61,7 @@ export interface UpdateEventInput {
   date?: string;
   location?: string;
   image?: string;
+  network?: "stacks" | "bitcoin";
   ticketsTotal?: number;
 }
 

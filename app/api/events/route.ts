@@ -54,6 +54,8 @@ export async function GET(req: Request) {
   });
 }
 
+const NETWORKS = ["stacks", "bitcoin"] as const;
+
 const CreateBody = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
@@ -62,6 +64,7 @@ const CreateBody = z.object({
   location: z.string().min(1).max(300),
   image: z.string().url(),
   price: z.union([z.string(), z.number()]).transform((v) => v.toString()),
+  network: z.enum(NETWORKS).default("stacks"),
   ticketsTotal: z.number().int().positive().max(1_000_000),
 });
 
@@ -101,6 +104,7 @@ export async function POST(req: Request) {
       location: data.location,
       image: data.image,
       price: priceDecimal,
+      network: data.network,
       ticketsTotal: data.ticketsTotal,
       organizerId: session.userId,
     },

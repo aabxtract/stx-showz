@@ -6,7 +6,7 @@ export default function CreateEventPage() {
     <div className="container-page max-w-3xl">
       <PageHeader
         title="Create a new event"
-        subtitle="Set up your event and configure how tickets are sold. Everything below will be minted on Stacks once on-chain integration ships."
+        subtitle="Set up your event and choose whether to sell tickets on Stacks or Bitcoin."
       />
       <EventForm />
     </div>

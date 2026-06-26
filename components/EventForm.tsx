@@ -4,8 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEvent } from "@/lib/apiClient";
 import { useWallet } from "@/components/WalletProvider";
+import ImageUpload from "@/components/ImageUpload";
 
 const categories = ["Music", "Tech", "Sports", "Art", "Conference", "Workshop"] as const;
+
+const CURRENCY_LABELS: Record<string, string> = {
+  stacks: "STX",
+  bitcoin: "BTC",
+};
 
 export default function EventForm() {
   const router = useRouter();
@@ -21,14 +27,15 @@ export default function EventForm() {
     time: "",
     location: "",
     image: "",
+    network: "stacks",
     price: "",
     ticketsTotal: "",
   });
 
   const update =
     (k: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      setForm((f) => ({ ...f, [k]: e.target.value }));
+      (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+        setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +72,7 @@ export default function EventForm() {
         location: form.location,
         image: form.image,
         price: form.price,
+        network: form.network,
         ticketsTotal,
       });
       router.push(`/events/${created.id}`);
@@ -148,23 +156,42 @@ export default function EventForm() {
           />
         </div>
         <div>
-          <label className="label">Event image URL</label>
-          <input
-            className="input"
-            type="url"
-            required
-            value={form.image}
-            onChange={update("image")}
-            placeholder="https://…"
-          />
+          <label className="label">Event image</label>
+          <ImageUpload value={form.image} onChange={(url) => setForm((f) => ({ ...f, image: url }))} />
         </div>
       </section>
 
       <section className="space-y-4 pt-2 border-t border-slate-200">
         <h3 className="font-semibold text-slate-900 pt-4">Ticket settings</h3>
+
+        <div>
+          <label className="label">Blockchain network</label>
+          <div className="flex gap-3">
+            {(["stacks", "bitcoin"] as const).map((n) => (
+              <label
+                key={n}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium cursor-pointer transition-colors ${form.network === n
+                    ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-[var(--card-bg)] dark:text-slate-400"
+                  }`}
+              >
+                <input
+                  type="radio"
+                  name="network"
+                  value={n}
+                  checked={form.network === n}
+                  onChange={update("network")}
+                  className="sr-only"
+                />
+                {n === "stacks" ? "⚡" : "₿"} {n === "stacks" ? "Stacks" : "Bitcoin"}
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="label">Ticket price (STX)</label>
+            <label className="label">Ticket price ({CURRENCY_LABELS[form.network]})</label>
             <input
               className="input"
               type="number"
