@@ -1,4 +1,4 @@
-
+import type { VeritixConfig } from "./types";
 import {
   VeritixError,
   VeritixAuthError,
