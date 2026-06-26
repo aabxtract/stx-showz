@@ -1,4 +1,5 @@
 import type { BuildTransferOptions, StacksNetworkName } from "./types";
+import { stxToMicroStx } from "./utils";
 
 /**
  * Stacks blockchain helpers for building ticket purchase transactions.
