@@ -85,18 +85,15 @@ export async function purchaseTicket(input: {
 export async function createEvent(input: {
   title: string;
   description: string;
-  category: string;
+  category: EventCategory;
   date: string;
   location: string;
   image: string;
   price: string;
-  network: string;
+  network: "stacks" | "bitcoin";
   ticketsTotal: number;
 }): Promise<AppEvent> {
-  const event = await veritix.events.create({
-    ...input,
-    category: input.category as EventCategory,
-  });
+  const event = await veritix.events.create(input);
   return toAppEvent(event);
 }
 
