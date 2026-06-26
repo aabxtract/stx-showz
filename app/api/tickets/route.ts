@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       : process.env.ESCROW_ADDRESS_TESTNET
   )?.trim();
 
-  if (!escrow) {
+  if (!escrow && !devBypass) {
     console.error(
       `[tickets] Missing escrow address for network=${network}. ` +
         `Set ESCROW_ADDRESS_${network.toUpperCase()} before accepting purchases.`,
