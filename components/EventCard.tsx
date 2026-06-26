@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { AppEvent } from "@/lib/types";
-import { shortAddr } from "@/lib/mockData";
+import { shortAddr } from "@/lib/utils";
 
 export default function EventCard({ event }: { event: AppEvent }) {
   const date = new Date(event.date);
