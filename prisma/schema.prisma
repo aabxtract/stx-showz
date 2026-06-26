@@ -1,0 +1,73 @@
+// Veritix backend schema
+// Wallet address is the primary identifier for users.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventCategory {
+  Music
+  Tech
+  Sports
+  Art
+  Conference
+  Workshop
+}
+
+enum EventStatus {
+  Active
+  SoldOut
+  Cancelled
+  Ended
+}
+
+enum TicketStatus {
+  Pending
+  Valid
+  Used
+  Cancelled
+}
+
+model User {
+  id          String   @id @default(cuid())
+  address     String   @unique
+  name        String?
+  bio         String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events  Event[]  @relation("OrganizerEvents")
+  tickets Ticket[]
+}
+
+model Event {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  category      EventCategory
+  date          DateTime
+  location      String
+  image         String
+  price         Decimal       @db.Decimal(20, 6)
+  network       String        @default("stacks") // stacks | bitcoin
+  ticketsTotal  Int
+  ticketsSold   Int           @default(0)
+  status        EventStatus   @default(Active)
+
+  organizerId   String
+  organizer     User          @relation("OrganizerEvents", fields: [organizerId], references: [id])
+
+  tickets       Ticket[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([organizerId])
+  @@index([date])
+}
+
