@@ -1,3 +1,4 @@
+import type { BuildTransferOptions, StacksNetworkName } from "./types";
 
 /**
  * Stacks blockchain helpers for building ticket purchase transactions.
