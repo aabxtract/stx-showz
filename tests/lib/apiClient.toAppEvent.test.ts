@@ -10,6 +10,7 @@ const baseSdkEvent = {
   location: "Online",
   image: "img.png",
   price: "12.500000",
+  network: "stacks",
   ticketsTotal: 100,
   ticketsSold: 30,
   ticketsLeft: 70,
