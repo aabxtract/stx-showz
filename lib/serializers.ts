@@ -12,6 +12,7 @@ export function serializeEvent(
     location: event.location,
     image: event.image,
     price: event.price.toString(),
+    network: event.network,
     ticketsTotal: event.ticketsTotal,
     ticketsSold: event.ticketsSold,
     ticketsLeft: event.ticketsTotal - event.ticketsSold,
