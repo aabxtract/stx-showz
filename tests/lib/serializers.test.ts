@@ -11,6 +11,7 @@ const baseEvent = {
   location: "Online",
   image: "https://example.com/img.png",
   price: new Prisma.Decimal("12.500000"),
+  network: "stacks",
   ticketsTotal: 100,
   ticketsSold: 30,
   status: "Active" as const,

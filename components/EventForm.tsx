@@ -22,12 +22,12 @@ export default function EventForm() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "",
+    category: "" as "" | "Music" | "Tech" | "Sports" | "Art" | "Conference" | "Workshop",
     date: "",
     time: "",
     location: "",
     image: "",
-    network: "stacks",
+    network: "stacks" as "stacks" | "bitcoin",
     price: "",
     ticketsTotal: "",
   });

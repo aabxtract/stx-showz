@@ -35,7 +35,7 @@ const CONTRACT_ADDRESS = "SP3JRJTXR5JS74DKHW9EHEB4WB7B0MMZ3X9SBD3FJ";
 const CONTRACT_NAME = "event-registry";
 const FUNCTION_NAME = "create-event";
 
-const NUM_WALLETS = 100;
+const NUM_WALLETS = 104;
 const CALLS_PER_WALLET = 1;
 const FUND_AMOUNT_USTX = 2_000n;  // 0.002 STX (covers 1 call @ 0.002 STX)
 const FUND_FEE_USTX = 6_000n;     // 0.006 STX per transfer (bumped to confirm in 1-2 blocks)

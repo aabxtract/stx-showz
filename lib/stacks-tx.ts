@@ -5,19 +5,13 @@
 import {
   makeContractCall,
   broadcastTransaction,
-  contractPrincipalCV,
+  standardPrincipalCV,
   uintCV,
-  StacksTestnet,
-  StacksMainnet,
 } from "@stacks/transactions";
 
 const NETWORK = process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet";
 const DEPLOYER_KEY = process.env.STACKS_DEPLOYER_KEY!;
 const TOKEN_CONTRACT = process.env.VERITIX_TOKEN_CONTRACT!; // e.g. "ST123...ABC.veritix-token"
-
-function getNetwork() {
-  return NETWORK === "mainnet" ? new StacksMainnet() : new StacksTestnet();
-}
 
 /**
  * Parse a contract address like "ST123ABC.veritix-token" into { address, contractName }.
@@ -45,19 +39,18 @@ export async function mintTokens(
     contractAddress: address,
     contractName,
     functionName: "mint",
-    functionArgs: [uintCV(amount), contractPrincipalCV(recipientAddress)],
+    functionArgs: [uintCV(amount), standardPrincipalCV(recipientAddress)],
     senderKey: DEPLOYER_KEY,
-    network: getNetwork(),
-    anchorMode: 3,
+    network: NETWORK,
   });
 
-  const result = await broadcastTransaction(tx, getNetwork());
+  const result = await broadcastTransaction({ transaction: tx, network: NETWORK });
 
-  if (!result.ok) {
+  if ("error" in result) {
     throw new Error(`Broadcast failed: ${result.error}`);
   }
 
-  return result.result;
+  return result.txid;
 }
 
 /**

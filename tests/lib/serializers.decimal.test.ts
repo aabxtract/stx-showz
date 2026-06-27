@@ -12,6 +12,7 @@ function makeEvent(price: string) {
     location: "L",
     image: "i",
     price: new Prisma.Decimal(price),
+    network: "stacks",
     ticketsTotal: 10,
     ticketsSold: 0,
     status: "Active" as const,
