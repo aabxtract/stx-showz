@@ -177,6 +177,47 @@ export interface Activity {
   timestamp: string;
 }
 
+// ─── Reward Types ──────────────────────────────────────────────────────────
+
+/** Reward configuration for an event. */
+export interface RewardConfig {
+  id: string;
+  eventId: string;
+  tokenPerCheckin: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Input for setting reward config on an event. */
+export interface CreateRewardConfigInput {
+  tokenPerCheckin: number;
+}
+
+/** A token disbursement record. */
+export interface Disbursement {
+  id: string;
+  userId: string;
+  eventId: string | null;
+  amount: number;
+  txId: string | null;
+  txStatus: string;
+  network: string;
+  type: string;
+  createdAt: string;
+}
+
+/** Input for triggering a single disbursement. */
+export interface DisburseRewardInput {
+  eventId: string;
+  attendeeAddress: string;
+}
+
+/** Response from a disbursement action. */
+export interface DisburseRewardResponse {
+  disbursement: Disbursement;
+  txId: string;
+}
+
 // ─── User Types ──────────────────────────────────────────────────────────────
 
 /** A user profile on Veritix. */

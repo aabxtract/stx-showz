@@ -16,6 +16,7 @@ import { EventsClient } from "./events";
 import { TicketsClient } from "./tickets";
 import { OrganizerClient } from "./organizer";
 import { UsersClient } from "./users";
+import { RewardsClient } from "./rewards";
 
 /**
  * Core Veritix SDK client.
@@ -47,6 +48,7 @@ export class VeritixClient {
   private _tickets?: TicketsClient;
   private _organizer?: OrganizerClient;
   private _users?: UsersClient;
+  private _rewards?: RewardsClient;
 
   constructor(config: VeritixConfig) {
     if (!config.baseUrl) {
@@ -93,6 +95,12 @@ export class VeritixClient {
   get users(): UsersClient {
     if (!this._users) this._users = new UsersClient(this);
     return this._users;
+  }
+
+  /** Token reward configuration and disbursements. */
+  get rewards(): RewardsClient {
+    if (!this._rewards) this._rewards = new RewardsClient(this);
+    return this._rewards;
   }
 
   // ─── Token management ───────────────────────────────────────────────────

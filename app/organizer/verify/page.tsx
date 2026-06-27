@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import VerificationResult, { type VerifyState } from "@/components/VerificationResult";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { verifyTicket } from "@/lib/apiClient";
 import { useWallet } from "@/components/WalletProvider";
 
@@ -40,6 +41,9 @@ export default function VerifyPage() {
     return (
       <div className="container-page max-w-2xl">
         <PageHeader title="Verify tickets" subtitle="Sign in as the event organizer to verify tickets." />
+        <div className="mt-6 flex justify-center">
+          <ConnectWalletButton className="btn-primary" />
+        </div>
       </div>
     );
   }
