@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { serializeEvent } from "@/lib/serializers";
+import { cancelOnChainEvent } from "@/lib/stacks-tx";
 
 type Ctx = { params: { id: string } };
 
