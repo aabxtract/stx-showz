@@ -85,5 +85,12 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     include: { organizer: { select: { address: true, name: true } } },
   });
 
+  // Cancel on-chain in background if registered
+  if (existing.onChainEventId && process.env.EVENT_REGISTRY_CONTRACT) {
+    cancelOnChainEvent(existing.onChainEventId).catch((err) =>
+      console.error("[events] On-chain cancellation failed:", err),
+    );
+  }
+
   return NextResponse.json({ event: serializeEvent(event) });
 }
