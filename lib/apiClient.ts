@@ -57,13 +57,22 @@ export async function fetchEvents(params: {
   category?: string;
   q?: string;
   organizer?: string;
-} = {}): Promise<AppEvent[]> {
+  limit?: number;
+  offset?: number;
+} = {}): Promise<{ events: AppEvent[]; total: number; limit: number; offset: number }> {
   const data = await veritix.events.list({
     category: params.category && params.category !== "All" ? params.category : undefined,
     q: params.q,
     organizer: params.organizer,
+    limit: params.limit,
+    offset: params.offset,
   });
-  return data.events.map(toAppEvent);
+  return {
+    events: data.events.map(toAppEvent),
+    total: data.total,
+    limit: data.limit,
+    offset: data.offset,
+  };
 }
 
 export async function fetchEvent(id: string): Promise<AppEvent> {
