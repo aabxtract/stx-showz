@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { serializeEvent } from "@/lib/serializers";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 const CATEGORIES = ["Music", "Tech", "Sports", "Art", "Conference", "Workshop"] as const;
 const STATUSES = ["Active", "SoldOut", "Cancelled", "Ended"] as const;
@@ -69,6 +70,11 @@ const CreateBody = z.object({
 });
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  if (await isRateLimited(`events:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const session = getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
