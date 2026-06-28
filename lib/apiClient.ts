@@ -3,6 +3,8 @@ import { VeritixClient, VeritixError } from "veritix-sdk";
 import type {
   EventCategory,
   PurchaseTicketResponse,
+  RewardConfig,
+  Disbursement,
   Ticket as SdkTicket,
   VeritixEvent,
   VerifyTicketResult,
@@ -108,4 +110,38 @@ export async function verifyTicket(
     }
     return { ok: false, error: "Verify failed" };
   }
+}
+
+// ─── Rewards ────────────────────────────────────────────────────────────────
+
+export async function getRewardConfig(eventId: string): Promise<RewardConfig | null> {
+  return veritix.rewards.getConfig(eventId);
+}
+
+export async function setRewardConfig(
+  eventId: string,
+  tokenPerCheckin: number,
+): Promise<RewardConfig> {
+  return veritix.rewards.setConfig(eventId, { tokenPerCheckin });
+}
+
+export async function disburseReward(
+  eventId: string,
+  attendeeAddress: string,
+): Promise<{ disbursement: Disbursement; txId: string }> {
+  return veritix.rewards.disburse({ eventId, attendeeAddress });
+}
+
+export async function disburseBatch(
+  eventId: string,
+): Promise<Disbursement[]> {
+  return veritix.rewards.disburseBatch(eventId);
+}
+
+export async function fetchDisbursements(): Promise<Disbursement[]> {
+  return veritix.rewards.list();
+}
+
+export async function fetchVTXBalance(address: string): Promise<number> {
+  return veritix.rewards.balance(address);
 }
