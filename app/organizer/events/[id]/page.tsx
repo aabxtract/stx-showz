@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import OrganizerStats from "@/components/OrganizerStats";
 import ImageUpload from "@/components/ImageUpload";
-import { fetchEvent } from "@/lib/apiClient";
+import { fetchEvent, getRewardConfig, setRewardConfig, disburseBatch } from "@/lib/apiClient";
 import { shortAddress, useWallet } from "@/components/WalletProvider";
 import type { AppEvent } from "@/lib/types";
 
@@ -39,6 +39,13 @@ export default function ManageEventPage() {
     ticketsTotal: "",
   });
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [rewardPerCheckin, setRewardPerCheckin] = useState(0);
+  const [rewardLoading, setRewardLoading] = useState(true);
+  const [rewardSaving, setRewardSaving] = useState(false);
+  const [rewardError, setRewardError] = useState<string | null>(null);
+  const [batchDisbursing, setBatchDisbursing] = useState(false);
+  const [batchResult, setBatchResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -124,6 +131,43 @@ export default function ManageEventPage() {
   const updateEdit = (k: keyof typeof editForm) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setEditForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Rewards
+  useEffect(() => {
+    if (!id) return;
+    getRewardConfig(id)
+      .then((cfg) => setRewardPerCheckin(cfg?.tokenPerCheckin ?? 0))
+      .catch(() => {})
+      .finally(() => setRewardLoading(false));
+  }, [id]);
+
+  const saveRewardConfig = async () => {
+    if (!id) return;
+    setRewardSaving(true);
+    setRewardError(null);
+    try {
+      await setRewardConfig(id, rewardPerCheckin);
+    } catch (err) {
+      setRewardError((err as Error).message);
+    } finally {
+      setRewardSaving(false);
+    }
+  };
+
+  const handleBatchDisburse = async () => {
+    if (!id) return;
+    if (!confirm("Disburse VTX tokens to all checked-in attendees?")) return;
+    setBatchDisbursing(true);
+    setBatchResult(null);
+    try {
+      const result = await disburseBatch(id);
+      setBatchResult(`Disbursed to ${result.length} attendee(s).`);
+    } catch (err) {
+      setBatchResult(`Error: ${(err as Error).message}`);
+    } finally {
+      setBatchDisbursing(false);
+    }
+  };
 
   if (loading) return <div className="container-page text-slate-500">Loading…</div>;
   if (!isAuthed || error || !event) {
@@ -304,6 +348,44 @@ export default function ManageEventPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="font-semibold text-lg mb-4">VTX Token Rewards</h2>
+        <div className="card p-5 sm:p-6 space-y-4">
+          <div>
+            <label className="label">Tokens per check-in</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={0}
+                className="input w-32"
+                value={rewardPerCheckin}
+                onChange={(e) => setRewardPerCheckin(parseInt(e.target.value, 10) || 0)}
+                disabled={rewardLoading}
+              />
+              <button
+                onClick={saveRewardConfig}
+                className="btn-primary"
+                disabled={rewardSaving || rewardLoading}
+              >
+                {rewardSaving ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={handleBatchDisburse}
+                className="btn-secondary"
+                disabled={batchDisbursing || rewardPerCheckin === 0}
+              >
+                {batchDisbursing ? "Disbursing…" : "Disburse to all"}
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5">
+              Set how many VTX tokens each attendee receives when they check in. Use "Disburse to all" to send tokens to everyone who bought a ticket.
+            </p>
+          </div>
+          {rewardError && <div className="text-sm text-red-600">{rewardError}</div>}
+          {batchResult && <div className="text-sm text-emerald-600">{batchResult}</div>}
         </div>
       </div>
     </div>
