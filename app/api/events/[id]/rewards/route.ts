@@ -18,7 +18,7 @@ function serializeConfig(c: { id: string; eventId: string; tokenPerCheckin: numb
 export async function GET(_req: Request, { params }: Ctx) {
   const event = await prisma.event.findUnique({
     where: { id: params.id },
-    select: { id: true, organizerId: true, rewardConfig: true },
+    include: { rewardConfig: true },
   });
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
