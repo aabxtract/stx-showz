@@ -67,6 +67,8 @@ model Event {
   tickets        Ticket[]
   rewardConfig   RewardConfig?
   disbursements  Disbursement[]
+  onChainEventId Int?          // On-chain event ID from event-registry contract
+  onChainTxId    String?       // On-chain transaction ID
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
