@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import OrganizerStats from "@/components/OrganizerStats";
+import ImageUpload from "@/components/ImageUpload";
 import { fetchEvent } from "@/lib/apiClient";
 import { shortAddress, useWallet } from "@/components/WalletProvider";
 import type { AppEvent } from "@/lib/types";
+
+const categories = ["Music", "Tech", "Sports", "Art", "Conference", "Workshop"] as const;
 
 interface Attendee {
   wallet: string;
@@ -22,6 +25,20 @@ export default function ManageEventPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    category: "" as "" | "Music" | "Tech" | "Sports" | "Art" | "Conference" | "Workshop",
+    date: "",
+    time: "",
+    location: "",
+    image: "",
+    ticketsTotal: "",
+  });
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -49,6 +66,64 @@ export default function ManageEventPage() {
       setEvent((e) => (e ? { ...e, status: data.event.status === "Cancelled" ? "Cancelled" : e.status } : e));
     }
   };
+
+  const startEdit = () => {
+    if (!event) return;
+    const d = new Date(event.date);
+    setEditForm({
+      title: event.title,
+      description: event.description,
+      category: (event.category as typeof editForm.category) || "",
+      date: d.toISOString().split("T")[0],
+      time: d.toTimeString().slice(0, 5),
+      location: event.location,
+      image: event.image,
+      ticketsTotal: String(event.ticketsTotal),
+    });
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const saveEdit = async () => {
+    if (!event) return;
+    setSaving(true);
+    setEditError(null);
+    try {
+      const isoDate = new Date(`${editForm.date}T${editForm.time || "00:00"}:00`).toISOString();
+      const ticketsTotal = parseInt(editForm.ticketsTotal, 10);
+      if (!editForm.category) throw new Error("Pick a category");
+      if (!Number.isFinite(ticketsTotal) || ticketsTotal < 1) throw new Error("Total ticket supply must be ≥ 1");
+
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editForm.title,
+          description: editForm.description,
+          category: editForm.category,
+          date: isoDate,
+          location: editForm.location,
+          image: editForm.image,
+          ticketsTotal,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to save");
+      }
+      const data = await res.json();
+      setEvent((e) => e ? { ...e, ...data.event } : e);
+      setEditing(false);
+    } catch (err) {
+      setEditError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateEdit = (k: keyof typeof editForm) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setEditForm((f) => ({ ...f, [k]: e.target.value }));
 
   if (loading) return <div className="container-page text-slate-500">Loading…</div>;
   if (!isAuthed || error || !event) {
@@ -101,11 +176,66 @@ export default function ManageEventPage() {
           <Link href="/organizer/verify" className="btn-secondary flex-1 sm:flex-initial">
             Verify Tickets
           </Link>
+          {!editing && (
+            <button onClick={startEdit} className="btn-secondary flex-1 sm:flex-initial">
+              Edit Event
+            </button>
+          )}
           <button onClick={cancel} className="btn-danger flex-1 sm:flex-initial">
             Cancel Event
           </button>
         </div>
       </div>
+
+      {editing && (
+        <div className="card p-5 sm:p-6 mt-6 space-y-4">
+          <h3 className="font-semibold text-sm text-slate-900">Edit event</h3>
+          <div>
+            <label className="label">Title</label>
+            <input className="input" value={editForm.title} onChange={updateEdit("title")} maxLength={200} />
+          </div>
+          <div>
+            <label className="label">Description</label>
+            <textarea className="input min-h-[100px] resize-y" value={editForm.description} onChange={updateEdit("description")} maxLength={5000} />
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label className="label">Category</label>
+              <select className="input" value={editForm.category} onChange={updateEdit("category")}>
+                <option value="" disabled>Choose…</option>
+                {categories.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Date</label>
+              <input type="date" className="input" value={editForm.date} onChange={updateEdit("date")} />
+            </div>
+            <div>
+              <label className="label">Time</label>
+              <input type="time" className="input" value={editForm.time} onChange={updateEdit("time")} />
+            </div>
+          </div>
+          <div>
+            <label className="label">Location</label>
+            <input className="input" value={editForm.location} onChange={updateEdit("location")} maxLength={300} />
+          </div>
+          <div>
+            <label className="label">Event image</label>
+            <ImageUpload value={editForm.image} onChange={(url) => setEditForm((f) => ({ ...f, image: url }))} />
+          </div>
+          <div>
+            <label className="label">Total ticket supply</label>
+            <input className="input" type="number" min={1} value={editForm.ticketsTotal} onChange={updateEdit("ticketsTotal")} />
+          </div>
+          {editError && <div className="text-sm text-red-600">{editError}</div>}
+          <div className="flex gap-2 justify-end">
+            <button className="btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+            <button className="btn-primary" onClick={saveEdit} disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8">
         <OrganizerStats
