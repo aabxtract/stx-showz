@@ -8,10 +8,11 @@ import ConnectWalletButton from "./ConnectWalletButton";
 import { useWallet } from "./WalletProvider";
 import { useTheme } from "./ThemeProvider";
 
-const publicLinks: { href: string; label: string }[] = [];
+const publicLinks = [
+  { href: "/events", label: "Events" },
+];
 
 const privateLinks = [
-  { href: "/events", label: "Events" },
   { href: "/create-event", label: "Create Event" },
   { href: "/my-tickets", label: "My Tickets" },
   { href: "/organizer/dashboard", label: "Organizer" },
