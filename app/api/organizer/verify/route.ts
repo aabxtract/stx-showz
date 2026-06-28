@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 const Body = z.object({
   ticketId: z.string().min(1),
 });
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  if (await isRateLimited(`verify:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const session = getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

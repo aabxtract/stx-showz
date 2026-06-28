@@ -3,6 +3,8 @@ import { VeritixClient, VeritixError } from "veritix-sdk";
 import type {
   EventCategory,
   PurchaseTicketResponse,
+  RewardConfig,
+  Disbursement,
   Ticket as SdkTicket,
   VeritixEvent,
   VerifyTicketResult,
@@ -55,13 +57,22 @@ export async function fetchEvents(params: {
   category?: string;
   q?: string;
   organizer?: string;
-} = {}): Promise<AppEvent[]> {
+  limit?: number;
+  offset?: number;
+} = {}): Promise<{ events: AppEvent[]; total: number; limit: number; offset: number }> {
   const data = await veritix.events.list({
     category: params.category && params.category !== "All" ? params.category : undefined,
     q: params.q,
     organizer: params.organizer,
+    limit: params.limit,
+    offset: params.offset,
   });
-  return data.events.map(toAppEvent);
+  return {
+    events: data.events.map(toAppEvent),
+    total: data.total,
+    limit: data.limit,
+    offset: data.offset,
+  };
 }
 
 export async function fetchEvent(id: string): Promise<AppEvent> {
@@ -108,4 +119,38 @@ export async function verifyTicket(
     }
     return { ok: false, error: "Verify failed" };
   }
+}
+
+// ─── Rewards ────────────────────────────────────────────────────────────────
+
+export async function getRewardConfig(eventId: string): Promise<RewardConfig | null> {
+  return veritix.rewards.getConfig(eventId);
+}
+
+export async function setRewardConfig(
+  eventId: string,
+  tokenPerCheckin: number,
+): Promise<RewardConfig> {
+  return veritix.rewards.setConfig(eventId, { tokenPerCheckin });
+}
+
+export async function disburseReward(
+  eventId: string,
+  attendeeAddress: string,
+): Promise<{ disbursement: Disbursement; txId: string }> {
+  return veritix.rewards.disburse({ eventId, attendeeAddress });
+}
+
+export async function disburseBatch(
+  eventId: string,
+): Promise<Disbursement[]> {
+  return veritix.rewards.disburseBatch(eventId);
+}
+
+export async function fetchDisbursements(): Promise<Disbursement[]> {
+  return veritix.rewards.list();
+}
+
+export async function fetchVTXBalance(address: string): Promise<number> {
+  return veritix.rewards.balance(address);
 }

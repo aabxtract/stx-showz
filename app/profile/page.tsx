@@ -37,6 +37,13 @@ export default function ProfilePage() {
   const [eventsCount, setEventsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [editAvatar, setEditAvatar] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!isAuthed) {
       setLoading(false);
@@ -60,6 +67,40 @@ export default function ProfilePage() {
   const wallet = address ?? user?.address ?? "";
   const displayName = user?.name ?? shortAddress(wallet);
   const role = eventsCount > 0 ? "Organizer" : "Attendee";
+
+  const startEdit = () => {
+    setEditName(user?.name ?? "");
+    setEditBio(user?.bio ?? "");
+    setEditAvatar(user?.avatarUrl ?? "");
+    setProfileError(null);
+    setEditing(true);
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    setProfileError(null);
+    try {
+      const res = await fetch("/api/users/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName || null,
+          bio: editBio || null,
+          avatarUrl: editAvatar || null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to save");
+      }
+      setEditing(false);
+      window.location.reload();
+    } catch (err) {
+      setProfileError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="container-page max-w-4xl">
@@ -97,9 +138,58 @@ export default function ProfilePage() {
               {role}
             </span>
             {!isConnected && <ConnectWalletButton className="btn-secondary !py-1.5 !px-3 text-xs" />}
+            {isAuthed && !editing && (
+              <button onClick={startEdit} className="btn-secondary !py-1.5 !px-3 text-xs">
+                Edit Profile
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {editing && (
+        <div className="card p-5 sm:p-6 mt-4 space-y-4">
+          <h3 className="font-semibold text-sm text-slate-900">Edit profile</h3>
+          <div>
+            <label className="label">Display name</label>
+            <input
+              className="input"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Your name"
+              maxLength={80}
+            />
+          </div>
+          <div>
+            <label className="label">Bio</label>
+            <textarea
+              className="input min-h-[80px] resize-y"
+              value={editBio}
+              onChange={(e) => setEditBio(e.target.value)}
+              placeholder="Tell people about yourself"
+              maxLength={500}
+            />
+          </div>
+          <div>
+            <label className="label">Avatar URL</label>
+            <input
+              className="input"
+              value={editAvatar}
+              onChange={(e) => setEditAvatar(e.target.value)}
+              placeholder="https://example.com/avatar.png"
+            />
+          </div>
+          {profileError && <div className="text-sm text-red-600">{profileError}</div>}
+          <div className="flex gap-2 justify-end">
+            <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn-primary" onClick={saveProfile} disabled={saving}>
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6">
         {loading ? (

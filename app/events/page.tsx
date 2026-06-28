@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import EventCard from "@/components/EventCard";
 import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
@@ -17,34 +17,61 @@ const categories = [
   "Workshop",
 ] as const;
 
+const PAGE_SIZE = 12;
+
 export default function EventsPage() {
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("All");
   const [events, setEvents] = useState<AppEvent[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadPage = useCallback(
+    (p: number) => {
+      let cancelled = false;
+      setLoading(true);
+      setError(null);
+      const handle = setTimeout(() => {
+        fetchEvents({
+          category: cat === "All" ? undefined : cat,
+          q: query || undefined,
+          limit: PAGE_SIZE,
+          offset: p * PAGE_SIZE,
+        })
+          .then(({ events: evts, total: t }) => {
+            if (!cancelled) {
+              setEvents(evts);
+              setTotal(t);
+            }
+          })
+          .catch((e: Error) => {
+            if (!cancelled) setError(e.message);
+          })
+          .finally(() => {
+            if (!cancelled) setLoading(false);
+          });
+      }, 200);
+      return () => {
+        cancelled = true;
+        clearTimeout(handle);
+      };
+    },
+    [cat, query],
+  );
+
+  // Reset to page 0 when filters change
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    const handle = setTimeout(() => {
-      fetchEvents({ category: cat === "All" ? undefined : cat, q: query || undefined })
-        .then((evts) => {
-          if (!cancelled) setEvents(evts);
-        })
-        .catch((e: Error) => {
-          if (!cancelled) setError(e.message);
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    }, 200);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
+    setPage(0);
   }, [cat, query]);
+
+  // Load current page
+  useEffect(() => {
+    return loadPage(page);
+  }, [page, loadPage]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="container-page">
@@ -93,11 +120,35 @@ export default function EventsPage() {
           description="Try clearing your search or picking a different category."
         />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {events.map((e) => (
-            <EventCard key={e.id} event={e} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {events.map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="btn-secondary !py-1.5 !px-3 text-sm disabled:opacity-40"
+              >
+                ← Prev
+              </button>
+              <span className="text-sm text-slate-500">
+                Page {page + 1} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                className="btn-secondary !py-1.5 !px-3 text-sm disabled:opacity-40"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

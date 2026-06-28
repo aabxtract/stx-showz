@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyTicketPayment, type StacksNetwork } from "@/lib/hiro";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 const Body = z.object({
   eventId: z.string().min(1),
@@ -41,6 +42,11 @@ function serializeTicket(t: {
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  if (await isRateLimited(`tickets:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const session = getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -124,6 +130,14 @@ export async function POST(req: Request) {
         if (incremented.count === 0) {
           throw new Error("SOLD_OUT");
         }
+        // Auto-transition to SoldOut when all tickets are gone
+        const refreshed = await tx.event.findUnique({ where: { id: eventId }, select: { ticketsSold: true, ticketsTotal: true } });
+        if (refreshed && refreshed.ticketsSold >= refreshed.ticketsTotal) {
+          await tx.event.updateMany({
+            where: { id: eventId, status: "Active" },
+            data: { status: "SoldOut" },
+          });
+        }
         return tx.ticket.findUnique({ where: { txId } });
       });
       if (!updated) {
@@ -146,6 +160,14 @@ export async function POST(req: Request) {
           data: { ticketsSold: { increment: 1 } },
         });
         if (incremented.count === 0) throw new Error("SOLD_OUT");
+        // Auto-transition to SoldOut when all tickets are gone
+        const refreshed = await tx.event.findUnique({ where: { id: eventId }, select: { ticketsSold: true, ticketsTotal: true } });
+        if (refreshed && refreshed.ticketsSold >= refreshed.ticketsTotal) {
+          await tx.event.updateMany({
+            where: { id: eventId, status: "Active" },
+            data: { status: "SoldOut" },
+          });
+        }
         return tx.ticket.create({
           data: {
             eventId,

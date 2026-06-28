@@ -57,7 +57,7 @@ export default function ConnectWalletButton({
 
       {open && (
         <div className="absolute right-0 mt-2 w-64 sm:w-72 card p-2 z-50">
-            <div className="px-3 py-2">
+          <div className="px-3 py-2">
             <div className="text-xs text-slate-500">Connected wallet</div>
             <div className="font-mono text-xs break-all text-slate-800 dark:text-slate-200 mt-0.5">
               {address}
@@ -70,11 +70,10 @@ export default function ConnectWalletButton({
                 <button
                   key={n}
                   onClick={() => setNetwork(n)}
-                  className={`flex-1 px-2 py-1.5 rounded-lg text-xs capitalize border ${
-                    network === n
+                  className={`flex-1 px-2 py-1.5 rounded-lg text-xs capitalize border ${network === n
                       ? "bg-brand-50 dark:bg-brand-900/30 border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-400"
                       : "bg-white dark:bg-[var(--card-bg)] border-slate-200 text-slate-600 hover:border-slate-300"
-                  }`}
+                    }`}
                 >
                   {n}
                 </button>
