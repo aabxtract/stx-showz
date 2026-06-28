@@ -15,6 +15,7 @@ const publicLinks = [
 const privateLinks = [
   { href: "/create-event", label: "Create Event" },
   { href: "/my-tickets", label: "My Tickets" },
+  { href: "/rewards", label: "Rewards" },
   { href: "/organizer/dashboard", label: "Organizer" },
   { href: "/profile", label: "Profile" },
 ];
