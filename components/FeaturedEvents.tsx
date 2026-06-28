@@ -10,8 +10,8 @@ export default function FeaturedEvents() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEvents()
-      .then((evts) => setEvents(evts.slice(0, 3)))
+    fetchEvents({ limit: 3 })
+      .then(({ events }) => setEvents(events))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
   }, []);
