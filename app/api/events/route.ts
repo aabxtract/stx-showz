@@ -5,11 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { serializeEvent } from "@/lib/serializers";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
+import { createOnChainEvent } from "@/lib/stacks-tx";
 
 const CATEGORIES = ["Music", "Tech", "Sports", "Art", "Conference", "Workshop"] as const;
 const STATUSES = ["Active", "SoldOut", "Cancelled", "Ended"] as const;
 
 export async function GET(req: Request) {
+  // Background: transition past Active events to Ended
+  prisma.event.updateMany({
+    where: { status: "Active", date: { lt: new Date() } },
+    data: { status: "Ended" },
+  }).catch(() => {});
+
   const url = new URL(req.url);
   const category = url.searchParams.get("category");
   const status = url.searchParams.get("status");
@@ -116,6 +123,22 @@ export async function POST(req: Request) {
     },
     include: { organizer: { select: { address: true, name: true } } },
   });
+
+  // Register on-chain in background (non-blocking)
+  if (data.network === "stacks" && process.env.EVENT_REGISTRY_CONTRACT) {
+    const eventDateUnix = Math.floor(new Date(data.date).getTime() / 1000);
+    const priceUstx = priceDecimal.mul(1_000_000).toNumber();
+    createOnChainEvent({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      location: data.location,
+      image: data.image,
+      eventDateUnix,
+      priceUstx,
+      ticketsTotal: data.ticketsTotal,
+    }).catch((err) => console.error("[events] On-chain registration failed:", err));
+  }
 
   return NextResponse.json({ event: serializeEvent(event) }, { status: 201 });
 }
