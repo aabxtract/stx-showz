@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyTicketPayment, type StacksNetwork } from "@/lib/hiro";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 const Body = z.object({
   eventId: z.string().min(1),
