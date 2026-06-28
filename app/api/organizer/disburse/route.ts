@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { mintTokens } from "@/lib/stacks-tx";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 const Body = z.object({
   eventId: z.string().min(1),
@@ -10,6 +11,11 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  if (await isRateLimited(`disburse:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const session = getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
