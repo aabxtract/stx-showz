@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { id: true, organizerId: true, rewardConfig: true },
+    include: { rewardConfig: true },
   });
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   if (event.organizerId !== session.userId) {

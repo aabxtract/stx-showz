@@ -81,6 +81,12 @@ export type {
   Attendee,
   VerifyTicketResult,
   Activity,
+  // Rewards
+  RewardConfig,
+  CreateRewardConfigInput,
+  Disbursement,
+  DisburseRewardInput,
+  DisburseRewardResponse,
   // Users
   User,
   UpdateProfileInput,
