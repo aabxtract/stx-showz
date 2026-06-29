@@ -18,6 +18,8 @@ const baseEvent = {
   organizerId: "user_1",
   createdAt: new Date("2026-06-01T00:00:00.000Z"),
   updatedAt: new Date("2026-06-15T00:00:00.000Z"),
+  onChainEventId: null,
+  onChainTxId: null,
 };
 
 describe("serializers.serializeEvent — happy path", () => {
