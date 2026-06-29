@@ -1,14 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — pending statuses", () => {
   test("returns pending when tx not found yet (404)", async () => {
     process.env.ESCROW_ADDRESS_TESTNET = "SPESCROW";
     mockFetch(() => ({ status: 404, body: {} }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xnotyet",
         expectedPriceStx: new Prisma.Decimal("1"),
@@ -37,7 +37,7 @@ describe("lib/hiro.verifyTicketPayment — pending statuses", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xpending",
         expectedPriceStx: new Prisma.Decimal("1"),
