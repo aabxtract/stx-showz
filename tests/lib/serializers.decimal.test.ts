@@ -19,6 +19,8 @@ function makeEvent(price: string) {
     organizerId: "u",
     createdAt: new Date(),
     updatedAt: new Date(),
+    onChainEventId: null,
+    onChainTxId: null,
   };
 }
 

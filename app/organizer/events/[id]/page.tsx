@@ -388,6 +388,57 @@ export default function ManageEventPage() {
           {batchResult && <div className="text-sm text-emerald-600">{batchResult}</div>}
         </div>
       </div>
+
+      {/* Withdrawals */}
+      <div className="mt-10">
+        <h2 className="font-semibold text-lg mb-4">Withdraw Revenue</h2>
+        <div className="card p-5 sm:p-6 space-y-4">
+          <div className="text-sm text-slate-600">
+            Revenue collected: <span className="font-semibold">{revenue} {event.currency}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={0}
+              step="0.000001"
+              className="input w-40"
+              placeholder="Amount"
+              id="withdraw-amount"
+            />
+            <input
+              className="input flex-1"
+              placeholder="Recipient address"
+              id="withdraw-address"
+            />
+            <button
+              onClick={async () => {
+                const amountEl = document.getElementById("withdraw-amount") as HTMLInputElement;
+                const addressEl = document.getElementById("withdraw-address") as HTMLInputElement;
+                const amount = parseFloat(amountEl?.value || "0");
+                const toAddress = addressEl?.value || "";
+                if (!amount || !toAddress) return;
+                if (!confirm(`Withdraw ${amount} ${event.currency} to ${toAddress}?`)) return;
+                const res = await fetch("/api/organizer/withdraw", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ eventId: event.id, amount: String(amount), toAddress }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  alert("Withdrawal submitted! Tx: " + (data.withdrawal?.txId ?? "pending"));
+                  amountEl.value = "";
+                  addressEl.value = "";
+                } else {
+                  alert(data.error ?? "Withdrawal failed");
+                }
+              }}
+              className="btn-primary"
+            >
+              Withdraw
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

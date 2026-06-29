@@ -57,9 +57,38 @@ export async function fetchEvents(params: {
   category?: string;
   q?: string;
   organizer?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  minPrice?: string;
+  maxPrice?: string;
   limit?: number;
   offset?: number;
 } = {}): Promise<{ events: AppEvent[]; total: number; limit: number; offset: number }> {
+  // Use direct API call when advanced filters are present
+  const hasAdvancedFilters = params.dateFrom || params.dateTo || params.minPrice || params.maxPrice;
+  if (hasAdvancedFilters) {
+    const searchParams = new URLSearchParams();
+    if (params.category && params.category !== "All") searchParams.set("category", params.category);
+    if (params.q) searchParams.set("q", params.q);
+    if (params.organizer) searchParams.set("organizer", params.organizer);
+    if (params.dateFrom) searchParams.set("dateFrom", params.dateFrom);
+    if (params.dateTo) searchParams.set("dateTo", params.dateTo);
+    if (params.minPrice) searchParams.set("minPrice", params.minPrice);
+    if (params.maxPrice) searchParams.set("maxPrice", params.maxPrice);
+    if (params.limit) searchParams.set("limit", String(params.limit));
+    if (params.offset) searchParams.set("offset", String(params.offset));
+
+    const res = await fetch(`/api/events?${searchParams}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch events");
+    const data = await res.json();
+    return {
+      events: (data.events as VeritixEvent[]).map(toAppEvent),
+      total: data.total,
+      limit: data.limit,
+      offset: data.offset,
+    };
+  }
+
   const data = await veritix.events.list({
     category: params.category && params.category !== "All" ? params.category : undefined,
     q: params.q,

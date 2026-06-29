@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { verifyTicketPayment, type StacksNetwork } from "@/lib/hiro";
+import { verifyTicketPayment, type TxNetwork, type StacksNetwork } from "@/lib/hiro";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
+import { sendTicketConfirmation } from "@/lib/email";
 
 const Body = z.object({
   eventId: z.string().min(1),
@@ -56,14 +57,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
   const { eventId, txId } = parsed.data;
-  const network: StacksNetwork =
-    parsed.data.network ?? (process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet");
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   if (event.status !== "Active") {
     return NextResponse.json({ error: `Event is ${event.status}` }, { status: 400 });
   }
+
+  // Use event's blockchain network for escrow lookup
+  const network = event.network === "bitcoin" ? "mainnet" : (process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet") as StacksNetwork;
 
   const existing = await prisma.ticket.findUnique({ where: { txId } });
   if (existing && existing.ownerId !== session.userId) {
@@ -99,7 +101,7 @@ export async function POST(req: Request) {
   const check = devBypass
     ? ({ ok: true, status: "confirmed", sender: session.address } as const)
     : await verifyTicketPayment({
-      network,
+      network: event.network as TxNetwork,
       txId,
       expectedPriceStx: event.price,
       buyerAddress: session.address,
@@ -181,6 +183,22 @@ export async function POST(req: Request) {
           },
         });
       });
+
+      // Send confirmation email in background
+      const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { address: true } });
+      if (user) {
+        const currency = event.network === "bitcoin" ? "BTC" : "STX";
+        sendTicketConfirmation({
+          to: user.address,
+          eventTitle: event.title,
+          eventDate: event.date.toISOString(),
+          eventLocation: event.location,
+          ticketId: txId,
+          amountPaid: event.price.toString(),
+          currency,
+        }).catch(() => {});
+      }
+
       return NextResponse.json({ ticket: serializeTicket(created) }, { status: 201 });
     }
 

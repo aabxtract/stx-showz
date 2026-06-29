@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — escrow not configured", () => {
   test("returns failed without calling Hiro when escrow address is unset", async () => {
@@ -16,7 +16,7 @@ describe("lib/hiro.verifyTicketPayment — escrow not configured", () => {
     }) as typeof fetch;
 
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xany",
         expectedPriceStx: new Prisma.Decimal("1"),

@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — wrong tx type", () => {
   test("rejects a contract_call submitted as a ticket payment", async () => {
@@ -17,7 +17,7 @@ describe("lib/hiro.verifyTicketPayment — wrong tx type", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xcall",
         expectedPriceStx: new Prisma.Decimal("1"),

@@ -22,6 +22,10 @@ const PAGE_SIZE = 12;
 export default function EventsPage() {
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("All");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -37,6 +41,10 @@ export default function EventsPage() {
         fetchEvents({
           category: cat === "All" ? undefined : cat,
           q: query || undefined,
+          dateFrom: dateFrom || undefined,
+          dateTo: dateTo || undefined,
+          minPrice: minPrice || undefined,
+          maxPrice: maxPrice || undefined,
           limit: PAGE_SIZE,
           offset: p * PAGE_SIZE,
         })
@@ -58,13 +66,13 @@ export default function EventsPage() {
         clearTimeout(handle);
       };
     },
-    [cat, query],
+    [cat, query, dateFrom, dateTo, minPrice, maxPrice],
   );
 
   // Reset to page 0 when filters change
   useEffect(() => {
     setPage(0);
-  }, [cat, query]);
+  }, [cat, query, dateFrom, dateTo, minPrice, maxPrice]);
 
   // Load current page
   useEffect(() => {
@@ -107,6 +115,31 @@ export default function EventsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Date and price filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-500">From</label>
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="input !py-1.5 !px-2 text-xs" />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-500">To</label>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="input !py-1.5 !px-2 text-xs" />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-500">Min price</label>
+          <input type="number" min={0} step="0.01" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="input !py-1.5 !px-2 text-xs w-24" />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-500">Max price</label>
+          <input type="number" min={0} step="0.01" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="input !py-1.5 !px-2 text-xs w-24" />
+        </div>
+        {(dateFrom || dateTo || minPrice || maxPrice) && (
+          <button onClick={() => { setDateFrom(""); setDateTo(""); setMinPrice(""); setMaxPrice(""); }} className="text-xs text-slate-500 hover:text-slate-800 underline">
+            Clear filters
+          </button>
+        )}
       </div>
 
       {loading ? (

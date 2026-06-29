@@ -45,6 +45,7 @@ model User {
   events        Event[]
   tickets       Ticket[]
   disbursements Disbursement[]
+  withdrawals   Withdrawal[]
 }
 
 model Event {
@@ -67,6 +68,9 @@ model Event {
   tickets        Ticket[]
   rewardConfig   RewardConfig?
   disbursements  Disbursement[]
+  withdrawals    Withdrawal[]
+  onChainEventId Int?          // On-chain event ID from event-registry contract
+  onChainTxId    String?       // On-chain transaction ID
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -136,4 +140,21 @@ model Disbursement {
   @@index([userId])
   @@index([eventId])
   @@index([type])
+}
+
+model Withdrawal {
+  id          String   @id @default(cuid())
+  organizerId String
+  organizer   User     @relation(fields: [organizerId], references: [id])
+  eventId     String?
+  event       Event?   @relation(fields: [eventId], references: [id])
+  amount      Decimal  @db.Decimal(20, 6)
+  toAddress   String
+  txId        String?
+  txStatus    String   @default("pending") // pending | confirmed | failed
+  network     String
+  createdAt   DateTime @default(now())
+
+  @@index([organizerId])
+  @@index([eventId])
 }

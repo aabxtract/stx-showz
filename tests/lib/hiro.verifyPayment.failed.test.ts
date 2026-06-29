@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — abort statuses", () => {
   test("rejects abort_by_response", async () => {
@@ -17,7 +17,7 @@ describe("lib/hiro.verifyTicketPayment — abort statuses", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xabort",
         expectedPriceStx: new Prisma.Decimal("1"),
@@ -46,7 +46,7 @@ describe("lib/hiro.verifyTicketPayment — abort statuses", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xpc",
         expectedPriceStx: new Prisma.Decimal("1"),

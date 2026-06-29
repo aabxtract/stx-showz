@@ -18,6 +18,8 @@ const baseEvent = {
   organizerId: "user_1",
   createdAt: new Date(),
   updatedAt: new Date(),
+  onChainEventId: null,
+  onChainTxId: null,
 };
 
 describe("serializers.serializeEvent — organizer field", () => {

@@ -58,6 +58,8 @@ test("converts Decimal price to string and computes ticketsLeft", () => {
     organizerId: "u1",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-02T00:00:00Z"),
+    onChainEventId: null,
+    onChainTxId: null,
     organizer: { address: "SP1", name: null },
   });
   assert.equal(out.price, "12.5");
@@ -83,6 +85,8 @@ test("works without organizer relation", () => {
     organizerId: "u1",
     createdAt: new Date(),
     updatedAt: new Date(),
+    onChainEventId: null,
+    onChainTxId: null,
   });
   assert.equal(out.organizer, undefined);
   assert.equal(out.ticketsLeft, 10);
