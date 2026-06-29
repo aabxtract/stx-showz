@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — amount mismatch", () => {
   test("rejects underpayment", async () => {
@@ -18,7 +18,7 @@ describe("lib/hiro.verifyTicketPayment — amount mismatch", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xshort",
         expectedPriceStx: new Prisma.Decimal("12.5"),
@@ -44,7 +44,7 @@ describe("lib/hiro.verifyTicketPayment — amount mismatch", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xover",
         expectedPriceStx: new Prisma.Decimal("12.5"),

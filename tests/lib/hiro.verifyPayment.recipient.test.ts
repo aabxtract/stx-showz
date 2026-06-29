@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — wrong recipient", () => {
   test("rejects when STX went to an address other than escrow", async () => {
@@ -17,7 +17,7 @@ describe("lib/hiro.verifyTicketPayment — wrong recipient", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "testnet",
         txId: "0xrugged",
         expectedPriceStx: new Prisma.Decimal("12.5"),
