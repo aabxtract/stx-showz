@@ -22,6 +22,10 @@ export async function GET(req: Request) {
   const status = url.searchParams.get("status");
   const organizerAddress = url.searchParams.get("organizer");
   const q = url.searchParams.get("q");
+  const dateFrom = url.searchParams.get("dateFrom");
+  const dateTo = url.searchParams.get("dateTo");
+  const minPrice = url.searchParams.get("minPrice");
+  const maxPrice = url.searchParams.get("maxPrice");
   const take = Math.min(parseInt(url.searchParams.get("limit") || "50", 10) || 50, 100);
   const skip = Math.max(parseInt(url.searchParams.get("offset") || "0", 10) || 0, 0);
 
@@ -41,6 +45,18 @@ export async function GET(req: Request) {
       { description: { contains: q, mode: "insensitive" } },
       { location: { contains: q, mode: "insensitive" } },
     ];
+  }
+  if (dateFrom) {
+    where.date = { ...where.date, gte: new Date(dateFrom) };
+  }
+  if (dateTo) {
+    where.date = { ...where.date, lte: new Date(dateTo) };
+  }
+  if (minPrice) {
+    where.price = { ...where.price, gte: new Prisma.Decimal(minPrice) };
+  }
+  if (maxPrice) {
+    where.price = { ...where.price, lte: new Prisma.Decimal(maxPrice) };
   }
 
   const [events, total] = await Promise.all([
