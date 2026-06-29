@@ -26,6 +26,7 @@ export default function MyTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transferringId, setTransferringId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthed) {
@@ -38,6 +39,28 @@ export default function MyTicketsPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [isAuthed]);
+
+  const handleTransfer = async (ticketId: string) => {
+    const toAddress = prompt("Enter the wallet address to transfer this ticket to:");
+    if (!toAddress) return;
+    setTransferringId(ticketId);
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toAddress }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message ?? "Ticket transferred!");
+        setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+      } else {
+        alert(data.error ?? "Transfer failed");
+      }
+    } finally {
+      setTransferringId(null);
+    }
+  };
 
   if (authLoading) {
     return <div className="container-page text-slate-500">Loading…</div>;
@@ -86,7 +109,18 @@ export default function MyTicketsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {tickets.map((t) => (
-            <TicketCard key={t.id} ticket={t} />
+            <div key={t.id}>
+              <TicketCard ticket={t} />
+              {t.status === "Valid" && (
+                <button
+                  onClick={() => handleTransfer(t.id)}
+                  disabled={transferringId === t.id}
+                  className="mt-2 w-full btn-secondary !py-1.5 text-xs"
+                >
+                  {transferringId === t.id ? "Transferring…" : "Transfer Ticket"}
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
