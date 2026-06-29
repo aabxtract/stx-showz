@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { describe, test, assert } from "../_harness";
 import { mockFetch, restoreFetch } from "../_helpers/mockFetch";
-import { verifyTicketPayment } from "../../lib/hiro";
+import { verifyStacksPayment } from "../../lib/hiro";
 
 describe("lib/hiro.verifyTicketPayment — mainnet escrow routing", () => {
   test("reads ESCROW_ADDRESS_MAINNET (not the testnet var) for mainnet calls", async () => {
@@ -23,7 +23,7 @@ describe("lib/hiro.verifyTicketPayment — mainnet escrow routing", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "mainnet",
         txId: "0xmain",
         expectedPriceStx: new Prisma.Decimal("1"),
@@ -49,7 +49,7 @@ describe("lib/hiro.verifyTicketPayment — mainnet escrow routing", () => {
       },
     }));
     try {
-      const result = await verifyTicketPayment({
+      const result = await verifyStacksPayment({
         network: "mainnet",
         txId: "0xmain_ok",
         expectedPriceStx: new Prisma.Decimal("1"),
