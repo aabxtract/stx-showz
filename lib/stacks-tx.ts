@@ -158,3 +158,34 @@ export async function cancelOnChainEvent(onChainEventId: number): Promise<string
 
   return result.txid;
 }
+
+// ─── Withdrawals ────────────────────────────────────────────────────────────
+
+/**
+ * Send STX from the escrow wallet to an organizer's address.
+ * Used for event revenue withdrawals.
+ */
+export async function withdrawStx(params: {
+  toAddress: string;
+  amountUstx: number;
+  network: "mainnet" | "testnet";
+}): Promise<string> {
+  const { toAddress, amountUstx, network } = params;
+  const escrowKey = process.env.ESCROW_PRIVATE_KEY;
+  if (!escrowKey) throw new Error("ESCROW_PRIVATE_KEY not set");
+
+  const { makeSTXTokenTransfer } = await import("@stacks/transactions");
+  const tx = await makeSTXTokenTransfer({
+    recipient: toAddress,
+    amount: amountUstx,
+    senderKey: escrowKey,
+    network,
+  });
+
+  const result = await broadcastTransaction({ transaction: tx, network });
+  if ("error" in result) {
+    throw new Error(`Broadcast failed: ${result.error}`);
+  }
+
+  return result.txid;
+}
