@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyTicketPayment, type TxNetwork, type StacksNetwork } from "@/lib/hiro";
 import { isRateLimited, getClientIp } from "@/lib/rateLimit";
+import { sendTicketConfirmation } from "@/lib/email";
 
 const Body = z.object({
   eventId: z.string().min(1),
@@ -182,6 +183,22 @@ export async function POST(req: Request) {
           },
         });
       });
+
+      // Send confirmation email in background
+      const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { address: true } });
+      if (user) {
+        const currency = event.network === "bitcoin" ? "BTC" : "STX";
+        sendTicketConfirmation({
+          to: user.address,
+          eventTitle: event.title,
+          eventDate: event.date.toISOString(),
+          eventLocation: event.location,
+          ticketId: txId,
+          amountPaid: event.price.toString(),
+          currency,
+        }).catch(() => {});
+      }
+
       return NextResponse.json({ ticket: serializeTicket(created) }, { status: 201 });
     }
 
