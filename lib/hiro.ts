@@ -59,6 +59,9 @@ export async function fetchBitcoinTx(txId: string): Promise<HiroBitcoinTx | null
   return (await res.json()) as HiroBitcoinTx;
 }
 
+/** @deprecated Use fetchStacksTx or fetchBitcoinTx instead */
+export const fetchTx = fetchStacksTx;
+
 export type TxCheckResult =
   | { ok: true; status: "confirmed"; sender: string }
   | { ok: false; status: "pending" | "failed"; reason: string };
@@ -144,6 +147,7 @@ export async function verifyBitcoinPayment(params: {
  */
 export async function verifyTicketPayment(params: {
   network: TxNetwork;
+  stacksNetwork?: StacksNetwork;
   txId: string;
   expectedPriceStx: Prisma.Decimal;
   buyerAddress: string;
@@ -155,5 +159,10 @@ export async function verifyTicketPayment(params: {
       buyerAddress: params.buyerAddress,
     });
   }
-  return verifyStacksPayment(params);
+  return verifyStacksPayment({
+    network: params.stacksNetwork ?? (process.env.STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet"),
+    txId: params.txId,
+    expectedPriceStx: params.expectedPriceStx,
+    buyerAddress: params.buyerAddress,
+  });
 }
